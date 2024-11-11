@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Dashboard</title>
+  <style>
+    .container {
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 2em;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Client Dashboard</h2>
+    <div id="clientInfo"></div>
+  </div>
+
+  <script>
+    // Fetch client data from the server
+    async function getClientInfo() {
+      try {
+        const response = await fetch('http://localhost:3000/getUser/client');
+        const clientData = await response.json();
+        
+        if (clientData) {
+          const clientInfo = document.getElementById('clientInfo');
+          clientInfo.innerHTML = `
+            <p><strong>Name:</strong> ${clientData.name}</p>
+            <p><strong>Project:</strong> ${clientData.project}</p>
+          `;
+        } else {
+          document.getElementById('clientInfo').innerHTML = '<p>No client data found.</p>';
+        }
+      } catch (error) {
+        console.error('Error fetching client data:', error);
+      }
+    }
+
+    // Load client data when the page loads
+    window.onload = getClientInfo;
+  </script>
+</body>
+</html>
