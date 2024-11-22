@@ -4,62 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Worker Registration Table</title>
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    table, th, td {
-      border: 1px solid black;
-    }
-    th, td {
-      padding: 8px;
-      text-align: left;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Worker Registration Table</h1>
-  
-  <!-- Table to display dynamic data -->
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Program</th>
-        <th>Skills</th>
-        <th>Experience</th>
-        <th>Verification Status</th>
-        <th>Created At</th>
-      </tr>
-    </thead>
-    <tbody id="workerTableBody">
-      <!-- Dynamic rows will go here -->
-    </tbody>
-  </table>
-
-  <h2>Add New Worker</h2>
-  <form id="addWorkerForm">
-    <label for="name">Name:</label>
-    <input type="text" id="name" name="name" required>
-    <br><br>
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
-    <br><br>
-    <label for="program">Program:</label>
-    <input type="text" id="program" name="program" required>
-    <br><br>
-    <label for="skills">Skills:</label>
-    <input type="text" id="skills" name="skills" required>
-    <br><br>
-    <label for="experience">Experience:</label>
-    <textarea id="experience" name="experience" rows="3" required></textarea>
-    <br><br>
-    <button type="submit">Submit</button>
-  </form>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="logo">
+        <img src="../assets/css-logo-shield.webp" alt="Logo">
+        </div>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="formpage.html">Sign in as a Worker!</a></li>
+        <li><a href="workerpage.html">Workers</a></li>
+        <li><a href="requestorpage.html">Requestors</a></li>
+      </ul>
+    </nav>
+  <div class="container">
+    <h2>Add New Worker</h2>
+    <form id="addWorkerForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+      
+      <label for="program">Program:</label>
+      <input type="text" id="program" name="program" required>
+      
+      <label for="skills">Skills:</label>
+      <input type="text" id="skills" name="skills" required>
+      
+      <label for="experience">Experience:</label>
+      <textarea id="experience" name="experience" rows="3" required></textarea>
+      
+      <button type="submit">Submit</button>
+    </form>
+  </div>
 
   <script>
     // Function to fetch workers from the server and display them in the table

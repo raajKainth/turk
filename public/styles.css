@@ -1,0 +1,129 @@
+/* General styles */
+body {
+    margin: 0;
+    font-family: Calibri, sans-serif;
+    line-height: 2.0;
+  }
+
+  /* Navbar styles */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #141a2f; /* Dark blue color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    padding: 15px 25px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    color: white;
+    margin: 0;
+}
+
+/* Navbar logo container */
+.navbar .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #f0f0f0;
+    background: transparent;
+}
+
+/* Navbar links */
+.navbar .nav-links {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+  .navbar .nav-links li {
+    margin: 0 20px;
+    position: relative;
+  }
+  
+  .navbar .nav-links li a {
+    text-decoration: none;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    transition: color 0.3s ease, transform 0.3s ease;
+  }
+  
+  .navbar .nav-links li a:hover {
+    color: #f0a500;
+    transform: scale(1.1);
+  }
+  
+  .navbar .nav-links li a::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 3px;
+    background: #f0a500;
+    transition: width 0.3s ease-in-out;
+    margin-top: 5px;
+  }
+  
+  .navbar .nav-links li a:hover::after {
+    width: 100%;
+  }
+  
+  /* Optional animation for active link */
+  .navbar .nav-links li.active a {
+    color: #f0a500;
+  }
+  
+  /* Add glow effect */
+  .navbar .nav-links li a:hover {
+    text-shadow: 0 0 10px rgba(240, 165, 0, 0.8);
+  }
+  
+  
+  /* Table styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  table, th, td {
+    border: 1px solid black;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+  }
+  
+  /* Form styles */
+  form {
+    margin: 20px;
+  }
+  
+  form label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  form input, form textarea, form button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+  }
+  
+  form button {
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  form button:hover {
+    background-color: #555;
+  }
