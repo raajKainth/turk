@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Dashboard</title>
   <link rel="stylesheet" href="styles.css">
-  <title>Client Dashboard</title>
 </head>
 <body>
   <!-- Navbar -->
   <nav class="navbar">
     <div class="logo">
       <img src="../assets/css-logo-shield.webp" alt="Logo">
-      </div>
+    </div>
     <ul class="nav-links">
       <li><a href="home.html">Home</a></li>
       <li><a href="formpage.html">Sign in as a Worker!</a></li>
@@ -20,29 +20,97 @@
     </ul>
   </nav>
 
-  <!-- Main Content -->
-  <div class="container">
-    <h2>Welcome to Your Client Dashboard</h2>
-    <div id="clientInfo" class="info-box">
-      <!-- Client information will be dynamically loaded here -->
-    </div>
-  </div>
-
-  <!-- JavaScript -->
+  <form id="addTaskForm">
+    <label for="title">Task Title:</label>
+    <input type="text" id="title" name="title" required>
+  
+    <label for="description">Description:</label>
+    <textarea id="description" name="description" rows="3" required></textarea>
+  
+    <label for="deadline">Deadline:</label>
+    <input type="date" id="deadline" name="deadline" required>
+  
+    <label for="reward">Reward:</label>
+    <input type="number" step="0.01" id="reward" name="reward" required>
+  
+    <button type="submit">Add Task</button>
+  </form>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Deadline</th>
+        <th>Reward</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody id="taskTableBody">
+      <tr>
+        <td colspan="6">No tasks found</td>
+      </tr>
+    </tbody>
+  </table>
   <script>
-    // Retrieve and display client data
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    const clientInfo = document.getElementById('clientInfo');
-
-    if (userData && userData.role === 'client') {
-      clientInfo.innerHTML = `
-        <p><strong>Name:</strong> ${userData.name}</p>
-        <p><strong>Project:</strong> ${userData.project}</p>
-        <p><strong>Tasks Assigned:</strong> ${userData.tasksAssigned || 0}</p>
-      `;
-    } else {
-      clientInfo.innerHTML = '<p>No client data found. Please log in as a client.</p>';
+    async function fetchTasks() {
+      try {
+        const response = await fetch('http://localhost:3000/getTasks');
+        const tasks = await response.json();
+  
+        const tableBody = document.getElementById('taskTableBody');
+        tableBody.innerHTML = '';
+  
+        if (Array.isArray(tasks) && tasks.length > 0) {
+          tasks.forEach(task => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${task.id}</td>
+              <td>${task.title}</td>
+              <td>${task.description}</td>
+              <td>${task.deadline}</td>
+              <td>${task.reward}</td>
+              <td>${task.created_at}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          tableBody.innerHTML = '<tr><td colspan="6">No tasks found</td></tr>';
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
     }
+  
+    document.addEventListener('DOMContentLoaded', fetchTasks);
+  
+    document.getElementById('addTaskForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+  
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const deadline = document.getElementById('deadline').value;
+      const reward = parseFloat(document.getElementById('reward').value);
+  
+      try {
+        const response = await fetch('http://localhost:3000/addTask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, deadline, reward })
+        });
+  
+        if (response.ok) {
+          fetchTasks();
+        } else {
+          console.error('Error adding task:', await response.json());
+        }
+      } catch (error) {
+        console.error('Error adding task:', error);
+      }
+  
+      document.getElementById('addTaskForm').reset();
+    });
   </script>
 </body>
 </html>

@@ -1,12 +1,16 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Import CORS middleware
+const cors = require('cors');
 
 const app = express();
 const port = 3000;
 
-const db = new sqlite3.Database('./workers.db'); // SQLite database (updated filename)
+// Workers database
+const workersDb = new sqlite3.Database('./workers.db');
+
+// Tasks database
+const tasksDb = new sqlite3.Database('./tasks.db');
 
 // Enable CORS for all routes
 app.use(cors());
@@ -14,9 +18,9 @@ app.use(cors());
 // Middleware for parsing JSON
 app.use(bodyParser.json());
 
-// Initialize the database if it doesn't exist
-db.serialize(() => {
-  db.run(`
+// Initialize the workers database
+workersDb.serialize(() => {
+  workersDb.run(`
     CREATE TABLE IF NOT EXISTS workers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
@@ -29,13 +33,12 @@ db.serialize(() => {
     )
   `);
 
-  // Insert initial data if table is empty
-  db.get("SELECT COUNT(*) AS count FROM workers", (err, row) => {
+  // Insert example data if table is empty
+  workersDb.get("SELECT COUNT(*) AS count FROM workers", (err, row) => {
     if (err) {
       console.error('Error checking worker count:', err);
     } else if (row.count === 0) {
-      // Insert example data
-      const stmt = db.prepare("INSERT INTO workers (name, email, program, skills, experience, verification_status) VALUES (?, ?, ?, ?, ?, ?)");
+      const stmt = workersDb.prepare("INSERT INTO workers (name, email, program, skills, experience, verification_status) VALUES (?, ?, ?, ?, ?, ?)");
       stmt.run("John Doe", "john@example.com", "Developer", "JavaScript, Node.js", "5 years in web development", true);
       stmt.run("Jane Smith", "jane@example.com", "Manager", "Project Management", "3 years managing teams", false);
       stmt.run("Alice Johnson", "alice@example.com", "Designer", "Photoshop, Figma", "2 years in UI/UX design", true);
@@ -44,9 +47,23 @@ db.serialize(() => {
   });
 });
 
+// Initialize the tasks database
+tasksDb.serialize(() => {
+  tasksDb.run(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      description TEXT,
+      deadline DATE,
+      reward INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+});
+
 // API to get all workers
 app.get('/getWorkers', (req, res) => {
-  db.all("SELECT * FROM workers", (err, rows) => {
+  workersDb.all("SELECT * FROM workers", (err, rows) => {
     if (err) {
       res.status(500).json({ error: err.message });
     } else {
@@ -59,28 +76,53 @@ app.get('/getWorkers', (req, res) => {
 app.post('/addWorker', (req, res) => {
   const { name, email, program, skills, experience } = req.body;
 
-  console.log('Request body:', req.body); // Log the incoming data to the console
-
-  // Check if any data is missing or invalid
   if (!name || !email || !program || !skills || !experience) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
-  const stmt = db.prepare("INSERT INTO workers (name, email, program, skills, experience, verification_status) VALUES (?, ?, ?, ?, ?, ?)");
+  const stmt = workersDb.prepare("INSERT INTO workers (name, email, program, skills, experience, verification_status) VALUES (?, ?, ?, ?, ?, ?)");
   stmt.run(name, email, program, skills, experience, false, function (err) {
     if (err) {
-      console.error('Error inserting worker:', err); // Log the error if any
       return res.status(500).json({ error: err.message });
     } else {
-      console.log('Worker added with ID:', this.lastID); // Log the ID of the new worker
-      res.status(200).json({ 
-        id: this.lastID, 
-        name, 
-        email, 
-        program, 
-        skills, 
-        experience, 
-        verification_status: false, // Default to false initially
+      res.status(200).json({ id: this.lastID, name, email, program, skills, experience, verification_status: false, created_at: new Date().toISOString() });
+    }
+  });
+  stmt.finalize();
+});
+
+// API to get all tasks
+app.get('/getTasks', (req, res) => {
+  tasksDb.all("SELECT * FROM tasks", (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(200).json(rows);
+    }
+  });
+});
+
+// API to add a new task
+app.post('/addTask', (req, res) => {
+  const { title, description, deadline, reward } = req.body;
+
+  // Check if all fields are provided
+  if (!title || !description || !deadline || !reward) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Insert new task into the tasks database
+  const stmt = tasksDb.prepare("INSERT INTO tasks (title, description, deadline, reward) VALUES (?, ?, ?, ?)");
+  stmt.run(title, description, deadline, reward, function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    } else {
+      res.status(200).json({
+        id: this.lastID,
+        title,
+        description,
+        deadline,
+        reward,
         created_at: new Date().toISOString()
       });
     }
