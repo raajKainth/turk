@@ -1,6 +1,3 @@
-
-Signup.html
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +14,8 @@ Signup.html
             <input type="email" id="email" placeholder="Email" required>
             <input type="password" id="password" placeholder="Password" required>
             <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            <label for="resume">Upload Resume (PDF):</label>
+            <input type="file" id="resume" accept="application/pdf" required>
             <input type="submit" value="Sign Up">
         </form>
 
@@ -34,6 +33,7 @@ Signup.html
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
+            const resumeFile = document.getElementById('resume').files[0];
 
             // Check if password and confirm password match
             if (password !== confirmPassword) {
@@ -41,15 +41,32 @@ Signup.html
                 return;  // Stop further execution if passwords don't match
             }
 
-            // Save user data to localStorage
-            localStorage.setItem('name', name);
-            localStorage.setItem('email', email);
-            localStorage.setItem('password', password);
+            if (!resumeFile) {
+                alert('Please upload your resume');
+                return;
+            }
 
-            // Redirect to login page after successful sign up
-            window.location.href = 'testlogin.html';  // Redirect to login.html
+            // Convert resume file to Base64 for storage
+            const reader = new FileReader();
+            reader.onload = function() {
+                const resumeBase64 = reader.result;
+
+                // Save user data to localStorage
+                const userData = {
+                    name: name,
+                    email: email,
+                    password: password,
+                    resume: resumeBase64
+                };
+
+                localStorage.setItem('userProfile', JSON.stringify(userData));
+
+                // Redirect to login page after successful sign up
+                window.location.href = 'testlogin.html';
+            };
+
+            reader.readAsDataURL(resumeFile);
         });
     </script>
 </body>
 </html>
-

@@ -1,0 +1,43 @@
+<!--Google sign up -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Login</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // Callback to handle the credential response
+        function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+
+            // OPTIONAL: Send the ID token to your server for verification and session management
+            fetch('YOUR_BACKEND_ENDPOINT', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: response.credential })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Initialize Google Sign-In on page load
+        window.onload = function () {
+            google.accounts.id.initialize({
+                client_id: "122455660669-rs31ths6nn2egrk1ojin7958v0d2naq4.apps.googleusercontent.com", // Replace with your Client ID
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                document.getElementById("googleSignInDiv"), // Element to render the button
+                { theme: "outline", size: "large" } // Customization options
+            );
+            google.accounts.id.prompt(); // Automatically show the sign-in prompt
+        };
+    </script>
+</head>
+<body>
+    <h1>Google Sign-In Demo</h1>
+    <div id="googleSignInDiv"></div>
+</body>
+</html>
