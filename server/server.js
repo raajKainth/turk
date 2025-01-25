@@ -2,6 +2,10 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
+const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = 3000;
@@ -9,125 +13,108 @@ const port = 3000;
 // Workers database
 const workersDb = new sqlite3.Database('./workers.db');
 
-// Tasks database
-const tasksDb = new sqlite3.Database('./tasks.db');
-
-// Enable CORS for all routes
+// Middleware setup
 app.use(cors());
-
-// Middleware for parsing JSON
 app.use(bodyParser.json());
+app.use(fileUpload());
+app.use(express.static('uploads/resumes'));
 
-// Initialize the workers database
-workersDb.serialize(() => {
-  workersDb.run(`
-    CREATE TABLE IF NOT EXISTS workers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      email TEXT,
-      program TEXT,
-      skills TEXT,
-      experience TEXT,
-      verification_status BOOLEAN,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+// Ensure the uploads directory exists
+if (!fs.existsSync('./uploads/resumes')) {
+  fs.mkdirSync('./uploads/resumes');
+}
 
-  // Insert example data if table is empty
-  workersDb.get("SELECT COUNT(*) AS count FROM workers", (err, row) => {
-    if (err) {
-      console.error('Error checking worker count:', err);
-    } else if (row.count === 0) {
-      const stmt = workersDb.prepare("INSERT INTO workers (name, email, program, skills, experience, verification_status) VALUES (?, ?, ?, ?, ?, ?)");
-      stmt.run("John Doe", "john@example.com", "Developer", "JavaScript, Node.js", "5 years in web development", true);
-      stmt.run("Jane Smith", "jane@example.com", "Manager", "Project Management", "3 years managing teams", false);
-      stmt.run("Alice Johnson", "alice@example.com", "Designer", "Photoshop, Figma", "2 years in UI/UX design", true);
-      stmt.finalize();
-    }
-  });
-});
+// API to register a new worker with a resume upload
+app.post('/registerWorker', (req, res) => {
+  const { name, email, password, program, skills, experience } = req.body;
 
-// Initialize the tasks database
-tasksDb.serialize(() => {
-  tasksDb.run(`
-    CREATE TABLE IF NOT EXISTS tasks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT,
-      description TEXT,
-      deadline DATE,
-      reward INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-});
-
-// API to get all workers
-app.get('/getWorkers', (req, res) => {
-  workersDb.all("SELECT * FROM workers", (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(200).json(rows);
-    }
-  });
-});
-
-// API to add a new worker
-app.post('/addWorker', (req, res) => {
-  const { name, email, program, skills, experience } = req.body;
-
-  if (!name || !email || !program || !skills || !experience) {
-    return res.status(400).json({ error: 'All fields are required' });
+  if (!req.files || !req.files.resume) {
+    return res.status(400).json({ error: 'Resume file is required' });
   }
 
-  const stmt = workersDb.prepare("INSERT INTO workers (name, email, program, skills, experience, verification_status) VALUES (?, ?, ?, ?, ?, ?)");
-  stmt.run(name, email, program, skills, experience, false, function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    } else {
-      res.status(200).json({ id: this.lastID, name, email, program, skills, experience, verification_status: false, created_at: new Date().toISOString() });
-    }
-  });
-  stmt.finalize();
-});
+  const resumeFile = req.files.resume;
 
-// API to get all tasks
-app.get('/getTasks', (req, res) => {
-  tasksDb.all("SELECT * FROM tasks", (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.status(200).json(rows);
-    }
-  });
-});
-
-// API to add a new task
-app.post('/addTask', (req, res) => {
-  const { title, description, deadline, reward } = req.body;
-
-  // Check if all fields are provided
-  if (!title || !description || !deadline || !reward) {
-    return res.status(400).json({ error: 'All fields are required' });
+  // Validate file type (only PDF allowed)
+  if (resumeFile.mimetype !== 'application/pdf') {
+    return res.status(400).json({ error: 'Only PDF files are allowed' });
   }
 
-  // Insert new task into the tasks database
-  const stmt = tasksDb.prepare("INSERT INTO tasks (title, description, deadline, reward) VALUES (?, ?, ?, ?)");
-  stmt.run(title, description, deadline, reward, function (err) {
+  // Hash the password before saving it
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
-      return res.status(500).json({ error: err.message });
-    } else {
-      res.status(200).json({
-        id: this.lastID,
-        title,
-        description,
-        deadline,
-        reward,
-        created_at: new Date().toISOString()
+      return res.status(500).json({ error: 'Error hashing password' });
+    }
+
+    // Save the resume file to the uploads directory
+    const resumePath = `uploads/resumes/${Date.now()}_${resumeFile.name}`;
+    resumeFile.mv(resumePath, (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error saving file', details: err.message });
+      }
+
+      // Insert worker data into the database
+      const stmt = workersDb.prepare(`
+        INSERT INTO workers (name, email, password, resume, program, skills, experience, verification_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      stmt.run(name, email, hashedPassword, resumePath, program, skills, experience, false, function (err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        } else {
+          res.status(200).json({
+            id: this.lastID,
+            name,
+            email,
+            resume: resumePath,
+            program,
+            skills,
+            experience,
+            verification_status: false,
+            created_at: new Date().toISOString(),
+          });
+        }
       });
-    }
+      stmt.finalize();
+    });
   });
-  stmt.finalize();
+});
+
+// API to handle login
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  workersDb.get('SELECT * FROM workers WHERE email = ?', [email], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (!row) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Compare the entered password with the stored hash
+    bcrypt.compare(password, row.password, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error comparing passwords' });
+      }
+      if (!result) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // If the password matches, return a success response
+      res.status(200).json({
+        message: 'Login successful',
+        user: {
+          id: row.id,
+          name: row.name,
+          email: row.email,
+        },
+      });
+    });
+  });
 });
 
 // Start the server

@@ -3,19 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <title>Home</title>
 </head>
 <body>
-    <h2>Login</h2>
-    <form method="POST" action="/server/auth.php">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="../assets/css-logo-shield.webp" alt="Logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="formpage.html">Sign in as a Worker!</a></li>
+            <li><a href="workerpage.html">Workers</a></li>
+            <li><a href="requestorpage.html">Requestors</a></li>
+        </ul>
+    </nav>
 
-        <button type="submit">Login</button>
-    </form>
-    <p>Don't have an account? <a href="signup.html">Create one here</a></p>
+    <div class="form-container">
+        <h2>LOGIN</h2>
+        <form class="login-form" id="login-form">
+            <input type="email" id="username" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="submit" value="Login">
+        </form>
+        <div class="signup-link">
+            <p>Don't have an account? <a href="register.html">Sign Up</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const enteredEmail = document.getElementById('username').value;
+            const enteredPassword = document.getElementById('password').value;
+
+            // Send entered credentials to the backend for validation
+            fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: enteredEmail, password: enteredPassword })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Login successful!');
+                    window.location.href = 'home.html'; // Redirect to home page upon successful login
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while logging in.');
+            });
+        });
+    </script>
 </body>
 </html>

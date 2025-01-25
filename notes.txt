@@ -1,0 +1,103 @@
+Updated Pages
+Public Pages
+Home Page (with FAQ merged)
+Login Page
+Register Page
+Worker Pages
+Worker Dashboard (includes Task Market)
+Task Details
+Profile Page
+Requestor Pages
+Requestor Dashboard (includes Manage Tasks)
+Create Task
+Profile Page
+
+1. Public Pages Details
+1. Home Page (with FAQ merged)
+Purpose: Introduce the platform and answer common questions.
+Content:
+Welcome message and a brief introduction.
+Key features for both Requestors and Workers.
+"How It Works" section (merged with FAQ):
+For Workers: Earn by completing tasks.
+For Requestors: Post tasks to get help.
+Explanation of how skills and resumes help match workers to tasks.
+Links to Login and Register pages.
+
+2. Login Page
+Purpose: Allow both Requestors and Workers to log in.
+Content:
+Dropdown or toggle to select Requestor or Worker.
+Email and password fields.
+Link to register if the user doesn't have an account.
+
+3. Register Page (with Resume Submission for Workers)
+Purpose: Enable users to register as Requestors or Workers.
+Content:
+Dropdown or toggle to select Requestor or Worker.
+Common fields for both user types:
+Name, email, password, confirm password.
+For Workers:
+Additional fields: Skills, experience.
+PDF resume upload:
+Add a file input for uploading a resume.
+Validate that the file is a PDF.
+Resume gets saved in the server folder (e.g., uploads/resumes/) for Requestors to view.
+
+2. Worker Pages
+1. Worker Dashboard (merged with Task Market)
+Purpose: Serve as a central hub for workers, combining task browsing and updates.
+Content:
+A section displaying available tasks:
+Task title, description, reward, and deadline.
+Filters (e.g., by reward, skills, or deadline).
+Notifications (e.g., approved submissions, task deadlines).
+Buttons to accept tasks or view details.
+
+2. Task Details
+Purpose: Show detailed information about a selected task and allow workers to accept it.
+Content:
+Task title, detailed description, skills required, reward, and deadline.
+Button to accept the task.
+Option to message the Requestor for clarification.
+
+3. Worker Profile Page
+Purpose: Let workers manage their profiles and review their progress.
+Content:
+Worker details: Name, email, skills, and experience.
+Link to view or update the uploaded resume.
+List of completed tasks and earned rewards.
+
+3. Requestor Pages
+1. Requestor Dashboard (merged with Manage Tasks)
+Purpose: Provide a central hub for Requestors, combining task management with notifications.
+Content:
+Overview of all tasks:
+Tabs for Active, Submitted, and Completed tasks.
+List of tasks in each category with actions:
+Approve/reject submissions.
+Edit or delete tasks.
+Notifications about task submissions by Workers.
+
+2. Create Task
+Purpose: Enable Requestors to create new tasks.
+Content:
+Form to create a task:
+Fields: Title, description, required skills, deadline, and reward.
+Confirmation message upon successful task creation.
+
+3. Requestor Profile Page
+Purpose: Let Requestors manage their profiles and view worker resumes.
+Content:
+Requestor details: Name, email, and created tasks.
+Section to browse resumes of Workers who apply for their tasks:
+Worker name, skills, and link to their uploaded resume (PDF).
+Option to update profile information.
+
+3. Navigation Bar
+For Public Pages:
+Links: Home, Login, Register.
+For Workers:
+Links: Dashboard (includes Task Market), Profile, Logout.
+For Requestors:
+Links: Dashboard (includes Manage Tasks), Create Task, Profile, Logout.

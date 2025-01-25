@@ -1,0 +1,75 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Home</title>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+          <img src="../assets/css-logo-shield.webp" alt="Logo">
+          </div>
+        <ul class="nav-links">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="formpage.html">Sign in as a Worker!</a></li>
+          <li><a href="workerpage.html">Workers</a></li>
+          <li><a href="requestorpage.html">Requestors</a></li>
+        </ul>
+      </nav>
+<body>
+    <div class="form-container">
+        <h2>SIGN UP</h2>
+        <form class="signup-form" id="signup-form">
+            <input type="text" id="full-name" placeholder="Full Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            <label for="resume">Upload Resume (PDF):</label>
+            <input type="file" id="resume" accept="application/pdf" required>
+            <input type="submit" value="Sign Up">
+        </form>
+
+        <div class="login-link">
+            <p>Already have an account? <a href="login.html">Log In</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('signup-form').addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent default form submission
+    
+            const formData = new FormData();
+            formData.append('name', document.getElementById('full-name').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('password', document.getElementById('password').value);
+            formData.append('program', ''); // Add program field if applicable
+            formData.append('skills', ''); // Add skills field if applicable
+            formData.append('experience', ''); // Add experience field if applicable
+            formData.append('resume', document.getElementById('resume').files[0]);
+    
+            fetch('http://localhost:3000/registerWorker', {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.error) {
+                        alert(`Error: ${data.error}`);
+                    } else {
+                        alert('Registration successful!');
+                        window.location.href = 'testlogin.html';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('An error occurred while registering.');
+                });
+        });
+    </script>    
+</body>
+</html>
