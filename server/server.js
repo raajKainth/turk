@@ -6,6 +6,7 @@ const fileUpload = require('express-fileupload');
 const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const port = 3000;
@@ -104,6 +105,9 @@ app.post('/login', (req, res) => {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
+      // Generate a token for the user
+      const token = jwt.sign({ id: row.id }, 'your-secret-key', { expiresIn: '1h' });
+
       // If the password matches, return a success response
       res.status(200).json({
         message: 'Login successful',
@@ -111,8 +115,53 @@ app.post('/login', (req, res) => {
           id: row.id,
           name: row.name,
           email: row.email,
+          resume: row.resume,
+          program: row.program,
+          skills: row.skills,
+          experience: row.experience,
         },
+        token,
       });
+    });
+  });
+});
+
+// Middleware for authentication
+function authenticateToken(req, res, next) {
+  const token = req.header('Authorization') && req.header('Authorization').split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
+  }
+  
+  jwt.verify(token, 'your-secret-key', (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+}
+
+// API to fetch worker profile
+app.get('/profile', authenticateToken, (req, res) => {
+  const { id } = req.user; // Get worker ID from the token
+  workersDb.get('SELECT id, name, email, resume, program, skills, experience FROM workers WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+    // Send the resume URL
+    const resumeUrl = row.resume ? `http://localhost:3000/${row.resume}` : null;
+    res.status(200).json({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      resume: resumeUrl, // Include resume URL in the response
+      program: row.program,
+      skills: row.skills,
+      experience: row.experience,
     });
   });
 });

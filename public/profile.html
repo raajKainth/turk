@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Profile</title>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <img src="../assets/css-logo-shield.webp" alt="Logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="formpage.html">Sign in as a Worker!</a></li>
+            <li><a href="workerpage.html">Workers</a></li>
+            <li><a href="requestorpage.html">Requestors</a></li>
+        </ul>
+    </nav>    
+
+    <h2>Your Profile</h2>
+    <div>
+        <p>Name: <span id="name"></span></p>
+        <p>Email: <span id="email"></span></p>
+        <p>Program: <span id="program"></span></p>
+        <p>Skills: <span id="skills"></span></p>
+        <p>Experience: <span id="experience"></span></p>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('user')); // Get user data from localStorage
+
+            if (!user) {
+                // If no user data is found, redirect to login page
+                alert('You need to login first');
+                window.location.href = 'login.html'; // Redirect to login page
+            } else {
+                // If user data is found, display user details
+                document.getElementById('name').innerText = user.name;
+                document.getElementById('email').innerText = user.email;
+                document.getElementById('program').innerText = user.program;
+                document.getElementById('skills').innerText = user.skills;
+                document.getElementById('experience').innerText = user.experience;
+            }
+
+            if (data.resume) {
+                            const resumeLink = document.createElement('a');
+                            resumeLink.href = data.resume;  // Use the resume URL from the backend
+                            resumeLink.target = "_blank"; // Open in a new tab
+                            resumeLink.innerText = 'View Resume';
+                            document.getElementById('resume').appendChild(resumeLink);
+                        }
+            
+        };
+
+    </script>
+
+</body>
+</html>

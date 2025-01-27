@@ -1,35 +1,42 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
-    <title>Home</title>
+    <title>Register</title>
 </head>
 <body>
 
     <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">
-          <img src="../assets/css-logo-shield.webp" alt="Logo">
-          </div>
+            <img src="../assets/css-logo-shield.webp" alt="Logo">
+        </div>
         <ul class="nav-links">
-          <li><a href="home.html">Home</a></li>
-          <li><a href="formpage.html">Sign in as a Worker!</a></li>
-          <li><a href="workerpage.html">Workers</a></li>
-          <li><a href="requestorpage.html">Requestors</a></li>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="formpage.html">Sign in as a Worker!</a></li>
+            <li><a href="workerpage.html">Workers</a></li>
+            <li><a href="requestorpage.html">Requestors</a></li>
         </ul>
-      </nav>
-<body>
+    </nav>
+
+    <!-- Registration Form -->
     <div class="form-container">
-        <h2>SIGN UP</h2>
+        <h2>Sign Up</h2>
         <form class="signup-form" id="signup-form">
             <input type="text" id="full-name" placeholder="Full Name" required>
             <input type="email" id="email" placeholder="Email" required>
             <input type="password" id="password" placeholder="Password" required>
             <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            <label for="program">Program:</label>
+            <input type="text" id="program" placeholder="Enter your program">
+            <label for="skills">Skills:</label>
+            <input type="text" id="skills" placeholder="Enter your skills">
+            <label for="experience">Experience:</label>
+            <input type="text" id="experience" placeholder="Enter your experience">
             <label for="resume">Upload Resume (PDF):</label>
-            <input type="file" id="resume" accept="application/pdf" required>
+            <input type="file" id="resume" accept="application/pdf">
             <input type="submit" value="Sign Up">
         </form>
 
@@ -39,19 +46,42 @@
     </div>
 
     <script>
-        // Handle form submission
         document.getElementById('signup-form').addEventListener('submit', function (e) {
             e.preventDefault(); // Prevent default form submission
-    
+
+            // Get form data
+            const user = {
+                name: document.getElementById('full-name').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirm-password').value,
+                program: document.getElementById('program').value,
+                skills: document.getElementById('skills').value,
+                experience: document.getElementById('experience').value,
+                resume: document.getElementById('resume').files[0] ? document.getElementById('resume').files[0].name : ''
+            };
+
+            // Validate passwords
+            if (user.password !== user.confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // Save user data to localStorage
+            localStorage.setItem('user', JSON.stringify(user));
+
+            // Send data to the backend
             const formData = new FormData();
-            formData.append('name', document.getElementById('full-name').value);
-            formData.append('email', document.getElementById('email').value);
-            formData.append('password', document.getElementById('password').value);
-            formData.append('program', ''); // Add program field if applicable
-            formData.append('skills', ''); // Add skills field if applicable
-            formData.append('experience', ''); // Add experience field if applicable
-            formData.append('resume', document.getElementById('resume').files[0]);
-    
+            formData.append('name', user.name);
+            formData.append('email', user.email);
+            formData.append('password', user.password);
+            formData.append('program', user.program);
+            formData.append('skills', user.skills);
+            formData.append('experience', user.experience);
+            if (document.getElementById('resume').files[0]) {
+                formData.append('resume', document.getElementById('resume').files[0]);
+            }
+
             fetch('http://localhost:3000/registerWorker', {
                 method: 'POST',
                 body: formData,
@@ -62,14 +92,14 @@
                         alert(`Error: ${data.error}`);
                     } else {
                         alert('Registration successful!');
-                        window.location.href = 'testlogin.html';
+                        window.location.href = 'profile.html'; // Redirect to profile page
                     }
                 })
                 .catch((error) => {
                     console.error('Error:', error);
-                    alert('An error occurred while registering.');
+                    alert('An error occurred during registration.');
                 });
         });
-    </script>    
+    </script>
 </body>
 </html>
