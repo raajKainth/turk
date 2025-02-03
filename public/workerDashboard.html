@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker Registration Table</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="logo">
+    <img src="assets/css-logo-shield.webp" alt="Logo"> <!-- Updated to reflect correct image path -->
+  </div>
+  <ul class="nav-links">
+    <li><a href="home.html">Home</a></li>
+    <li><a href="login.html">Login</a></li>
+    <li><a href="register.html">Register</a></li>
+    <li><a href="workerDashboard.html">Worker Dashboard</a></li>
+    <li><a href="workerProfile.html">Worker Profile</a></li>
+    <li><a href="requestorDashboard.html">Requestor Dashboard</a></li>
+  </ul>
+</nav>
+
+<!-- Live Task List Table -->
+<h3>Task List</h3>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Deadline</th>
+      <th>Reward</th>
+      <th>Created At</th>
+    </tr>
+  </thead>
+  <tbody id="taskTableBody">
+    <tr>
+      <td colspan="6">No tasks found</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+// Function to fetch tasks from the server and update the table
+async function fetchTasks() {
+  try {
+    const response = await fetch('http://localhost:3000/getTasks');
+    const tasks = await response.json();
+
+    const tableBody = document.getElementById('taskTableBody');
+    tableBody.innerHTML = '';  // Clear any existing rows
+
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      tasks.forEach(task => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${task.id}</td>
+          <td>${task.title}</td>
+          <td>${task.description}</td>
+          <td>${task.deadline}</td>
+          <td>${task.reward}</td>
+          <td>${task.created_at}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    } else {
+      tableBody.innerHTML = '<tr><td colspan="6">No tasks found</td></tr>';
+    }
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+  }
+}
+
+// Fetch tasks when the page loads
+document.addEventListener('DOMContentLoaded', fetchTasks);
+
+// Handle form submission to add a new task and refresh the task list
+document.getElementById('addTaskForm').addEventListener('submit', async function(event) {
+  event.preventDefault(); // Prevent form from reloading the page
+
+  // Gather form data
+  const title = document.getElementById('title').value;
+  const description = document.getElementById('description').value;
+  const deadline = document.getElementById('deadline').value;
+  const reward = parseFloat(document.getElementById('reward').value);
+
+  try {
+    const response = await fetch('http://localhost:3000/addTask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description, deadline, reward })
+    });
+
+    if (response.ok) {
+      // Refresh the task list after adding a new task
+      fetchTasks();
+    } else {
+      const errorData = await response.json();
+      console.error('Error adding task:', errorData.error);
+    }
+  } catch (error) {
+    console.error('Error adding task:', error);
+  }
+
+  // Reset the form fields
+  document.getElementById('addTaskForm').reset();
+});
+</script>
+
+  <div class="container">
+    <h1>Worker Registration Table</h1>
+    
+    <!-- Table to display dynamic data -->
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Program</th>
+          <th>Skills</th>
+          <th>Experience</th>
+          <th>Verification Status</th>
+          <th>Created At</th>
+        </tr>
+      </thead>
+      <tbody id="workerTableBody">
+        <!-- Dynamic rows will go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Function to fetch workers from the server and display them in the table
+    async function fetchWorkers() {
+      try {
+        const response = await fetch('http://localhost:3000/getWorkers');
+        const data = await response.json();
+      
+        const tableBody = document.getElementById('workerTableBody');
+        tableBody.innerHTML = ''; // Clear existing table rows
+      
+        // Check if data is an array and not empty
+        if (Array.isArray(data) && data.length > 0) {
+          // Add each worker as a row in the table
+          data.forEach(worker => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${worker.id}</td>
+              <td>${worker.name}</td>
+              <td>${worker.email}</td>
+              <td>${worker.program}</td>
+              <td>${worker.skills}</td>
+              <td>${worker.experience}</td>
+              <td>${worker.verification_status ? "Verified" : "Pending"}</td>
+              <td>${worker.created_at}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          const row = document.createElement('tr');
+          row.innerHTML = '<td colspan="8">No workers found</td>';
+          tableBody.appendChild(row);
+        }
+      } catch (error) {
+        console.error('Error fetching workers:', error);
+      }
+    }
+  
+    // Call fetchWorkers on page load to load initial data
+    document.addEventListener('DOMContentLoaded', fetchWorkers);
+  </script>  
+</body>
+</html>

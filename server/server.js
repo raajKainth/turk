@@ -11,34 +11,58 @@ const session = require('express-session');
 const app = express();
 const port = 3000;
 
-app.use(express.static(path.join(__dirname, 'public')));
-
+// --- Set up the databases ---
 // Workers database
 const workersDb = new sqlite3.Database('./workers.db');
 
-// Middleware setup
+// Tasks database
+const tasksDb = new sqlite3.Database('./tasks.db');
+
+// Initialize tasks table if it doesn't exist
+tasksDb.serialize(() => {
+  tasksDb.run(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      description TEXT,
+      deadline DATE,
+      reward REAL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+});
+
+// --- Middleware setup ---
+
+// Serve static files from public folder (for frontend assets)
+app.use(express.static(path.join(__dirname, '../public')));
+
+// CORS configuration: adjust the origin as needed (make sure it matches your frontend URL)
 app.use(cors({
-  origin: 'http://localhost:3000', // or the URL from which you're serving your HTML files
+  origin: 'http://localhost:3000',
   credentials: true
 }));
+
 app.use(bodyParser.json());
 app.use(fileUpload());
-// Serve static files from the resumes folder (so the client can access resume files)
+
+// Serve static files from the resumes folder (so clients can access resume files)
 app.use(express.static('uploads/resumes'));
-app.use(express.static(path.join(__dirname, '../public')));
 
 // Setup express-session middleware
 app.use(session({
   secret: 'your-secret-key', // Change this to a secure, random key
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Use secure: true in production with HTTPS
+  cookie: { secure: false } // Use secure: true in production (with HTTPS)
 }));
 
 // Ensure the uploads/resumes directory exists
 if (!fs.existsSync('./uploads/resumes')) {
   fs.mkdirSync('./uploads/resumes', { recursive: true });
 }
+
+// --- Worker Endpoints ---
 
 // API to register a new worker with a resume upload
 app.post('/registerWorker', (req, res) => {
@@ -148,45 +172,6 @@ function ensureAuthenticated(req, res, next) {
   res.status(401).json({ error: 'Unauthorized access' });
 }
 
-// API to reupload resume using session authentication
-app.post('/reuploadResume', ensureAuthenticated, (req, res) => {
-  // Make sure a file was uploaded
-  if (!req.files || !req.files.resume) {
-    return res.status(400).json({ error: 'Resume file is required' });
-  }
-
-  const resumeFile = req.files.resume;
-
-  // Validate file type (only PDF allowed)
-  if (resumeFile.mimetype !== 'application/pdf') {
-    return res.status(400).json({ error: 'Only PDF files are allowed' });
-  }
-
-  // Save the new resume file
-  const newResumePath = `uploads/resumes/${Date.now()}_${resumeFile.name}`;
-  resumeFile.mv(newResumePath, (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error saving file', details: err.message });
-    }
-
-    // Update the worker's resume path in the database using the session user ID
-    const userId = req.session.user.id;
-    const stmt = workersDb.prepare('UPDATE workers SET resume = ? WHERE id = ?');
-    stmt.run(newResumePath, userId, function(err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      // Optionally update the session with the new resume
-      req.session.user.resume = newResumePath;
-      res.status(200).json({
-        message: 'Resume updated successfully',
-        resume: newResumePath
-      });
-    });
-    stmt.finalize();
-  });
-});
-
 // API to fetch worker profile using session authentication
 app.get('/profile', ensureAuthenticated, (req, res) => {
   const { id } = req.session.user;
@@ -210,13 +195,36 @@ app.get('/profile', ensureAuthenticated, (req, res) => {
   });
 });
 
-// API to get all workers' information (excluding passwords)
-app.get('/getWorkers', (req, res) => {
-  workersDb.all('SELECT id, name, email, program, skills, experience, verification_status, created_at FROM workers', (err, rows) => {
+// API to reupload resume using session authentication
+app.post('/reuploadResume', ensureAuthenticated, (req, res) => {
+  if (!req.files || !req.files.resume) {
+    return res.status(400).json({ error: 'Resume file is required' });
+  }
+
+  const resumeFile = req.files.resume;
+  if (resumeFile.mimetype !== 'application/pdf') {
+    return res.status(400).json({ error: 'Only PDF files are allowed' });
+  }
+
+  const newResumePath = `uploads/resumes/${Date.now()}_${resumeFile.name}`;
+  resumeFile.mv(newResumePath, (err) => {
     if (err) {
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: 'Error saving file', details: err.message });
     }
-    res.status(200).json(rows); // Send all workers data
+
+    const userId = req.session.user.id;
+    const stmt = workersDb.prepare('UPDATE workers SET resume = ? WHERE id = ?');
+    stmt.run(newResumePath, userId, function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      req.session.user.resume = newResumePath;
+      res.status(200).json({
+        message: 'Resume updated successfully',
+        resume: newResumePath
+      });
+    });
+    stmt.finalize();
   });
 });
 
@@ -230,7 +238,47 @@ app.post('/logout', (req, res) => {
   });
 });
 
-// Start the server
+// --- Task Endpoints ---
+
+// API to add a new task
+app.post('/addTask', (req, res) => {
+  const { title, description, deadline, reward } = req.body;
+  
+  if (!title || !description || !deadline || !reward) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  
+  const stmt = tasksDb.prepare(`
+    INSERT INTO tasks (title, description, deadline, reward)
+    VALUES (?, ?, ?, ?)
+  `);
+  stmt.run(title, description, deadline, reward, function(err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.status(200).json({
+      id: this.lastID,
+      title,
+      description,
+      deadline,
+      reward,
+      created_at: new Date().toISOString()
+    });
+  });
+  stmt.finalize();
+});
+
+// API to get all tasks
+app.get('/getTasks', (req, res) => {
+  tasksDb.all('SELECT * FROM tasks', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.status(200).json(rows);
+  });
+});
+
+// --- Start the Server ---
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });

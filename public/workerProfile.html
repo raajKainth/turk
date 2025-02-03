@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Worker Profile</title>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="../assets/css-logo-shield.webp" alt="Logo">
+    </div>
+    <ul class="nav-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="login.html">Login</a></li>
+      <li><a href="register.html">Register</a></li>
+      <li><a href="workerDashboard.html">Worker Dashboard</a></li>
+      <li><a href="workerProfile.html">Worker Profile</a></li>
+      <li><a href="requestorDashboard.html">Requestor Dashboard</a></li>
+    </ul>
+  </nav>
+
+  <div class="form-container">
+    <h2>Worker Profile</h2>
+    <p><strong>Name:</strong> <span id="worker-name">Loading...</span></p>
+    <p><strong>Email:</strong> <span id="worker-email">Loading...</span></p>
+    <p><strong>Resume:</strong> <a href="" id="resume-link">Download Resume</a></p>
+
+    <h3>Reupload Resume</h3>
+    <form id="resume-upload-form">
+      <input type="file" id="new-resume" accept="application/pdf" required>
+      <input type="submit" value="Upload New Resume">
+    </form>
+
+    <div class="login-link">
+      <p><a href="logout.html">Log out</a></p>
+    </div>
+  </div>
+
+  <script>
+    // Instead of relying on localStorage, fetch the profile using session credentials.
+    // Make sure to include credentials in your fetch so that the session cookie is sent.
+    fetch('http://localhost:3000/profile', {
+      method: 'GET',
+      credentials: 'include' // Send cookies with the request
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert(`Error: ${data.error}`);
+        } else {
+          document.getElementById('worker-name').textContent = data.name;
+          document.getElementById('worker-email').textContent = data.email;
+          document.getElementById('resume-link').href = `http://localhost:3000/${data.resume}`;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to load profile');
+      });
+
+    // Handle resume reupload
+    document.getElementById('resume-upload-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('resume', document.getElementById('new-resume').files[0]);
+
+      fetch('http://localhost:3000/reuploadResume', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include' // Ensure the session cookie is sent
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert(`Error: ${data.error}`);
+          } else {
+            alert('Resume reuploaded successfully!');
+            document.getElementById('resume-link').href = `http://localhost:3000/${data.resume}`;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to upload resume');
+        });
+    });
+  </script>
+</body>
+</html>
