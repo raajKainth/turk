@@ -141,3 +141,44 @@ body {
   .logout-btn:hover {
       background-color: #c9302c;
     }
+
+    /* Button Group Styling */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;           /* Space between buttons */
+  margin-top: 20px;     /* Top margin for spacing from preceding content */
+}
+
+/* Button Styling */
+.button {
+  display: inline-block;
+  background-color: #141a2f;;  /* Primary button color */
+  color: #fff;                /* Button text color */
+  padding: 10px 20px;         /* Vertical and horizontal padding */
+  text-decoration: none;      /* Remove underline from links */
+  border: none;               /* Remove default border */
+  border-radius: 5px;         /* Rounded corners */
+  font-size: 1rem;            /* Standard font size */
+  font-weight: 500;           /* Medium font weight */
+  text-align: center;         /* Center text horizontally */
+  transition: background-color 0.3s ease, transform 0.3s ease;  /* Smooth transitions */
+}
+
+/* Hover State */
+.button:hover {
+  background-color: #141a2f;;  /* Darker shade on hover */
+  transform: translateY(-2px);  /* Slight lift effect */
+}
+
+/* Active/Pressed State */
+.button:active {
+  background-color: #141a2f;;  /* Even darker shade when pressed */
+  transform: translateY(0);   /* Remove lift effect */
+}
+
+/* Optional: Focus Outline for Accessibility */
+.button:focus {
+  outline: 2px solid #141a2f;;
+  outline-offset: 2px;
+}

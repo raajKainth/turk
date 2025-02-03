@@ -10,7 +10,7 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="logo">
-      <img src="../assets/css-logo-shield.webp" alt="Logo" />
+      <img src="../assets/css-logo-shield.webp" alt="Logo"/>
     </div>
     <ul class="nav-links">
       <!-- Regular Link -->
@@ -40,17 +40,34 @@
     </ul>
   </nav>
 
-
   <h2>Your Profile</h2>
   <div>
     <form id="profileForm">
-      <p>Name: <input type="text" id="nameInput" name="name" /></p>
-      <p>Email: <input type="email" id="emailInput" name="email" /></p>
-      <p>Program: <input type="text" id="programInput" name="program" /></p>
-      <p>Skills: <input type="text" id="skillsInput" name="skills" /></p>
-      <p>Experience: <input type="text" id="experienceInput" name="experience" /></p>
-      <p>Password: <input type="password" id="passwordInput" name="password" /></p>
-      <!-- Password field is optional; if left empty, the original password remains unchanged -->
+      <p>
+        Name: <input type="text" id="nameInput" name="name" />
+      </p>
+      <p>
+        Email: <input type="email" id="emailInput" name="email" />
+      </p>
+      <p>
+        Program: <input type="text" id="programInput" name="program" />
+      </p>
+      <p>
+        Skills: <input type="text" id="skillsInput" name="skills" />
+      </p>
+      <p>
+        Experience: <input type="text" id="experienceInput" name="experience" />
+      </p>
+      <p>
+        Password: <input type="password" id="passwordInput" name="password" />
+        <!-- Password field is optional; if left empty, the original password remains unchanged -->
+      </p>
+      <p>
+        Resume: 
+        <input type="file" id="resumeInput" name="resume" accept=".pdf,.doc,.docx" />
+      </p>
+      <!-- This div will display a link to view the uploaded resume (if any) -->
+      <div id="resumePreview"></div>
       <button type="button" onclick="saveProfile()">Save</button>
     </form>
   </div>
@@ -72,6 +89,11 @@
         document.getElementById('programInput').value = user.program || '';
         document.getElementById('skillsInput').value = user.skills || '';
         document.getElementById('experienceInput').value = user.experience || '';
+        // If a resume was uploaded previously, display a link to view it.
+        if (user.resume) {
+          const resumePreview = document.getElementById('resumePreview');
+          resumePreview.innerHTML = `<a href="${user.resume}" target="_blank">View Uploaded Resume</a>`;
+        }
       }
     };
 
@@ -79,24 +101,46 @@
     function saveProfile() {
       // Retrieve the current user to preserve data not updated by the user (like password, if unchanged).
       const currentUser = JSON.parse(localStorage.getItem('user')) || {};
-
       const passwordInput = document.getElementById('passwordInput').value;
       // Only hash the password if a new one is provided.
       const updatedPassword = passwordInput ? hashPassword(passwordInput) : currentUser.password;
 
-      // Build the updated user object.
-      const updatedUser = {
-        name: document.getElementById('nameInput').value,
-        email: document.getElementById('emailInput').value,
-        program: document.getElementById('programInput').value,
-        skills: document.getElementById('skillsInput').value,
-        experience: document.getElementById('experienceInput').value,
-        password: updatedPassword  // Keep the old password if no new password is entered.
-      };
+      // Function to save the user data (including resume) to localStorage.
+      function saveUserWithResume(resumeData) {
+        const updatedUser = {
+          name: document.getElementById('nameInput').value,
+          email: document.getElementById('emailInput').value,
+          program: document.getElementById('programInput').value,
+          skills: document.getElementById('skillsInput').value,
+          experience: document.getElementById('experienceInput').value,
+          password: updatedPassword,  // Keep the old password if no new password is entered.
+          resume: resumeData  // This will be either the new resume data or the existing resume.
+        };
 
-      // Save the updated profile back to localStorage.
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      alert('Profile updated successfully!');
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        alert('Profile updated successfully!');
+
+        // If a new resume was uploaded, update the resume preview link.
+        if (resumeData) {
+          const resumePreview = document.getElementById('resumePreview');
+          resumePreview.innerHTML = `<a href="${resumeData}" target="_blank">View Uploaded Resume</a>`;
+        }
+      }
+
+      const resumeInput = document.getElementById('resumeInput');
+      // If a new resume file is selected, read it using FileReader.
+      if (resumeInput.files.length > 0) {
+        const file = resumeInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const resumeData = e.target.result; // Base64 encoded file data
+          saveUserWithResume(resumeData);
+        };
+        reader.readAsDataURL(file); // Read the file as a data URL.
+      } else {
+        // No new file selected; use the existing resume (if any).
+        saveUserWithResume(currentUser.resume || null);
+      }
     }
 
     // Example hashing function (for demonstration only)
