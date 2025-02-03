@@ -12,6 +12,13 @@ const session = require('express-session');
 const app = express();
 const port = 3000;
 
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve images and other assets from the assets folder.
+// This means any request to /assets will look inside turk-1/assets.
+app.use('/assets', express.static(path.join(__dirname, '../assets')));
+
+
 // Allowed origins list for CORS
 const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:5500'];
 
