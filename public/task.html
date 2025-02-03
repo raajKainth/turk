@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Post a New Task</title>
+</head>
+<body>
+<!-- Navbar-->
+<nav class="navbar">
+    <div class="logo">
+      <img src="../assets/css-logo-shield.webp" alt="Logo" />
+    </div>
+    <ul class="nav-links">
+      <!-- Regular Link -->
+      <li><a href="home.html">Home</a></li>
+
+      <!-- Worker Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Worker</option>
+          <option value="login.html">Login</option>
+          <option value="profile.html">Profile</option>
+          <option value="work.html">Work</option>
+          <option value="applied.html">My Applied Tasks</option>
+        </select>
+      </li>
+
+      <!-- Requestor Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Requestor</option>
+          <option value="requestorlogin.html">Login</option>
+          <option value="requestorprofile.html">Profile</option>
+          <option value="task.html">Task Creation</option>
+          <option value="postedtask.html">My Posted Tasks</option>
+        </select>
+      </li>
+    </ul>
+  </nav>
+
+  <h2>Post a New Task</h2>
+  <form id="postTaskForm">
+    <input type="text" id="title" placeholder="Task Title" required>
+    <textarea id="description" placeholder="Task Description" rows="5" required></textarea>
+    <input type="text" id="deadline" placeholder="Deadline (YYYY-MM-DD)" required>
+    <input type="text" id="reward" placeholder="Reward" required>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="submit" value="Post Task">
+  </form>
+  
+  <script>
+    document.getElementById('postTaskForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const deadline = document.getElementById('deadline').value.trim();
+      const reward = document.getElementById('reward').value.trim();
+      
+      // Get requestor info from localStorage to associate the task with the requester
+      const requestor = JSON.parse(localStorage.getItem('requestor'));
+      
+      if (!requestor) {
+        alert("Please login first.");
+        window.location.href = "login.html";
+        return;
+      }
+      
+      const taskData = { title, description, deadline, reward };
+      
+      fetch('http://localhost:3000/postTask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else {
+          alert("Task posted successfully!");
+          window.location.href = "home.html";
+        }
+      })
+      .catch(error => {
+        console.error("Error posting task:", error);
+        alert("An error occurred while posting the task.");
+      });
+    });
+  </script>
+</body>
+</html>

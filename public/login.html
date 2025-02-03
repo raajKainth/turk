@@ -1,68 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Home</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Login</title>
 </head>
 <body>
-
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">
-            <img src="../assets/css-logo-shield.webp" alt="Logo">
-        </div>
-        <ul class="nav-links">
-            <li><a href="home.html">Home</a></li>
-            <li><a href="formpage.html">Sign in as a Worker!</a></li>
-            <li><a href="workerpage.html">Workers</a></li>
-            <li><a href="requestorpage.html">Requestors</a></li>
-        </ul>
-    </nav>
-
-    <div class="form-container">
-        <h2>LOGIN</h2>
-        <form class="login-form" id="login-form">
-            <input type="email" id="username" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <input type="submit" value="Login">
-        </form>
-        <div class="signup-link">
-            <p>Don't have an account? <a href="register.html">Sign Up</a></p>
-        </div>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="../assets/css-logo-shield.webp" alt="Logo" />
     </div>
+    <ul class="nav-links">
+      <!-- Regular Link -->
+      <li><a href="home.html">Home</a></li>
 
-    <script>
-        // Handle login form submission
-        document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
+      <!-- Worker Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Worker</option>
+          <option value="login.html">Login</option>
+          <option value="profile.html">Profile</option>
+          <option value="work.html">Work</option>
+          <option value="applied.html">My Applied Tasks</option>
+        </select>
+      </li>
 
-            const enteredEmail = document.getElementById('username').value;
-            const enteredPassword = document.getElementById('password').value;
+      <!-- Requestor Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Requestor</option>
+          <option value="requestorlogin.html">Login</option>
+          <option value="requestorprofile.html">Profile</option>
+          <option value="task.html">Task Creation</option>
+          <option value="postedtask.html">My Posted Tasks</option>
+        </select>
+      </li>
+    </ul>
+  </nav>
 
-            // Send entered credentials to the backend for validation
-            fetch('http://localhost:3000/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: enteredEmail, password: enteredPassword })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert('Login successful!');
-                    window.location.href = 'home.html'; // Redirect to home page upon successful login
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while logging in.');
-            });
+  
+  <h1>Login</h1>
+  <form id="login-form">
+    <label for="email">Email:</label>
+    <input type="email" id="email" required />
+    <br /><br />
+    <label for="password">Password:</label>
+    <input type="password" id="password" required />
+    <br /><br />
+    <button type="submit">Login</button>
+  </form>
+
+  <!-- Create a new account button -->
+  <div style="margin-top: 20px;">
+    <button onclick="window.location.href='register.html'">Create a New Account</button>
+  </div>
+
+  <script>
+    // Use the same SHA-256 hashing function as in registration.
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashedBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashedBuffer));
+      const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
+      e.preventDefault(); // Prevent default form submission
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      // Hash the password using SHA-256 (async)
+      const hashedPassword = await hashPassword(password);
+
+      // Notice we now use '/login' instead of '/loginWorker'
+      fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: hashedPassword, // Send hashed password
+        }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            alert(`Error: ${data.error}`);
+          } else {
+            alert('Login successful!');
+            window.location.href = 'home.html'; // Redirect to home page
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred during login.');
         });
-    </script>
+    });
+  </script>
 </body>
 </html>

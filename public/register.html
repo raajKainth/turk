@@ -1,105 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Register</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Register</title>
 </head>
 <body>
-
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">
-            <img src="../assets/css-logo-shield.webp" alt="Logo">
-        </div>
-        <ul class="nav-links">
-            <li><a href="home.html">Home</a></li>
-            <li><a href="formpage.html">Sign in as a Worker!</a></li>
-            <li><a href="workerpage.html">Workers</a></li>
-            <li><a href="requestorpage.html">Requestors</a></li>
-        </ul>
-    </nav>
-
-    <!-- Registration Form -->
-    <div class="form-container">
-        <h2>Sign Up</h2>
-        <form class="signup-form" id="signup-form">
-            <input type="text" id="full-name" placeholder="Full Name" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-            <label for="program">Program:</label>
-            <input type="text" id="program" placeholder="Enter your program">
-            <label for="skills">Skills:</label>
-            <input type="text" id="skills" placeholder="Enter your skills">
-            <label for="experience">Experience:</label>
-            <input type="text" id="experience" placeholder="Enter your experience">
-            <label for="resume">Upload Resume (PDF):</label>
-            <input type="file" id="resume" accept="application/pdf">
-            <input type="submit" value="Sign Up">
-        </form>
-
-        <div class="login-link">
-            <p>Already have an account? <a href="login.html">Log In</a></p>
-        </div>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="../assets/css-logo-shield.webp" alt="Logo" />
     </div>
+    <ul class="nav-links">
+      <!-- Regular Link -->
+      <li><a href="home.html">Home</a></li>
 
-    <script>
-        document.getElementById('signup-form').addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevent default form submission
+      <!-- Worker Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Worker</option>
+          <option value="login.html">Login</option>
+          <option value="profile.html">Profile</option>
+          <option value="work.html">Work</option>
+          <option value="applied.html">My Applied Tasks</option>
+        </select>
+      </li>
 
-            // Get form data
-            const user = {
-                name: document.getElementById('full-name').value,
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
-                confirmPassword: document.getElementById('confirm-password').value,
-                program: document.getElementById('program').value,
-                skills: document.getElementById('skills').value,
-                experience: document.getElementById('experience').value,
-                resume: document.getElementById('resume').files[0] ? document.getElementById('resume').files[0].name : ''
-            };
+      <!-- Requestor Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Requestor</option>
+          <option value="requestorlogin.html">Login</option>
+          <option value="requestorprofile.html">Profile</option>
+          <option value="task.html">Task Creation</option>
+          <option value="postedtask.html">My Posted Tasks</option>
+        </select>
+      </li>
+    </ul>
+  </nav>
 
-            // Validate passwords
-            if (user.password !== user.confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
+  <!-- Registration Form -->
+  <div class="form-container">
+    <h2>Sign Up</h2>
+    <form class="signup-form" id="signup-form">
+      <input type="text" id="full-name" placeholder="Full Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <input type="password" id="confirm-password" placeholder="Confirm Password" required />
+      <label for="program">Program:</label>
+      <input type="text" id="program" placeholder="Enter your program" />
+      <label for="skills">Skills:</label>
+      <input type="text" id="skills" placeholder="Enter your skills" />
+      <label for="experience">Experience:</label>
+      <input type="text" id="experience" placeholder="Enter your experience" />
+      <label for="resume">Upload Resume (PDF):</label>
+      <input type="file" id="resume" accept="application/pdf" />
+      <input type="submit" value="Sign Up" />
+    </form>
 
-            // Save user data to localStorage
-            localStorage.setItem('user', JSON.stringify(user));
+    <div class="login-link">
+      <p>Already have an account? <a href="login.html">Log In</a></p>
+    </div>
+  </div>
 
-            // Send data to the backend
-            const formData = new FormData();
-            formData.append('name', user.name);
-            formData.append('email', user.email);
-            formData.append('password', user.password);
-            formData.append('program', user.program);
-            formData.append('skills', user.skills);
-            formData.append('experience', user.experience);
-            if (document.getElementById('resume').files[0]) {
-                formData.append('resume', document.getElementById('resume').files[0]);
-            }
+  <script>
+    // Use SHA-256 for hashing passwords consistently.
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashedBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashedBuffer));
+      const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
 
-            fetch('http://localhost:3000/registerWorker', {
-                method: 'POST',
-                body: formData,
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.error) {
-                        alert(`Error: ${data.error}`);
-                    } else {
-                        alert('Registration successful!');
-                        window.location.href = 'profile.html'; // Redirect to profile page
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    alert('An error occurred during registration.');
-                });
+    document.getElementById('signup-form').addEventListener('submit', async function (e) {
+      e.preventDefault(); // Prevent default form submission
+
+      // Get form data
+      const name = document.getElementById('full-name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const program = document.getElementById('program').value;
+      const skills = document.getElementById('skills').value;
+      const experience = document.getElementById('experience').value;
+      const resumeInput = document.getElementById('resume');
+      const resumeFile = resumeInput.files[0];
+
+      // Validate passwords
+      if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+      }
+
+      // Ensure that a resume file is selected
+      if (!resumeFile) {
+        alert('Please upload your resume in PDF format.');
+        return;
+      }
+
+      // Hash the password
+      const hashedPassword = await hashPassword(password);
+
+      // Save user data to localStorage, storing hashed password
+      const userToStore = {
+        name,
+        email,
+        password: hashedPassword,
+        program,
+        skills,
+        experience,
+        resume: resumeFile ? resumeFile.name : ''
+      };
+      localStorage.setItem('user', JSON.stringify(userToStore));
+
+      // Prepare form data for sending to the backend
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', hashedPassword); // Send hashed password
+      formData.append('program', program);
+      formData.append('skills', skills);
+      formData.append('experience', experience);
+      formData.append('resume', resumeFile); // Append the resume file
+
+      // Send data to the backend with additional debug logging
+      fetch('http://localhost:3000/registerWorker', {
+        method: 'POST',
+        body: formData,
+      })
+        .then((response) => {
+          console.log('HTTP status:', response.status);
+          return response.json();
+        })
+        .then((data) => {
+          console.log('Response data:', data);
+          if (data.error) {
+            alert(`Error: ${data.error}`);
+          } else {
+            alert('Registration successful!');
+            window.location.href = 'login.html'; // Redirect to profile page
+          }
+        })
+        .catch((error) => {
+          console.error('Fetch error:', error);
+          alert('An error occurred during registration.');
         });
-    </script>
+    });
+  </script>
 </body>
 </html>

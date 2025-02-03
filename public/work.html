@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Available Tasks for Workers</title>  
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="../assets/css-logo-shield.webp" alt="Logo" />
+    </div>
+    <ul class="nav-links">
+      <!-- Regular Link -->
+      <li><a href="home.html">Home</a></li>
+
+      <!-- Worker Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Worker</option>
+          <option value="login.html">Login</option>
+          <option value="profile.html">Profile</option>
+          <option value="work.html">Work</option>
+          <option value="applied.html">My Applied Tasks</option>
+        </select>
+      </li>
+
+      <!-- Requestor Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Requestor</option>
+          <option value="requestorlogin.html">Login</option>
+          <option value="requestorprofile.html">Profile</option>
+          <option value="task.html">Task Creation</option>
+          <option value="postedtask.html">My Posted Tasks</option>
+        </select>
+      </li>
+    </ul>
+  </nav>
+
+  <h2>Available Tasks</h2>
+  <div id="tasksContainer"></div>
+
+  <script>
+    // When the page loads, verify the worker is logged in and fetch tasks.
+    window.onload = function() {
+      // Check if the worker is logged in (assumed stored under "user" in localStorage)
+      const worker = JSON.parse(localStorage.getItem('user'));
+      if (!worker) {
+        alert("Please log in as a worker to view tasks.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Fetch all tasks from the server.
+      fetch('http://localhost:3000/getAllTasks')
+        .then(response => response.json())
+        .then(tasks => {
+          const container = document.getElementById('tasksContainer');
+          if (!tasks || tasks.length === 0) {
+            container.innerHTML = "<p>No tasks available at the moment.</p>";
+            return;
+          }
+          // Display each task.
+          tasks.forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task';
+            taskDiv.innerHTML = `
+              <h3>${task.title}</h3>
+              <p><strong>Description:</strong> ${task.description}</p>
+              <p><strong>Deadline:</strong> ${task.deadline}</p>
+              <p><strong>Reward:</strong> ${task.reward}</p>
+              <button class="apply-btn" onclick="applyToTask(${task.id})">Apply</button>
+            `;
+            container.appendChild(taskDiv);
+          });
+        })
+        .catch(error => {
+          console.error("Error fetching tasks:", error);
+          document.getElementById('tasksContainer').innerHTML = "<p>Error loading tasks.</p>";
+        });
+    };
+
+    // Function to apply for a task.
+    function applyToTask(taskId) {
+      // Retrieve the worker's profile from localStorage.
+      const worker = JSON.parse(localStorage.getItem('user'));
+      if (!worker) {
+        alert("Please log in as a worker to apply for tasks.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Build payload with taskId and worker's profile.
+      const payload = {
+        taskId: taskId,
+        workerProfile: worker
+      };
+
+      // Send application to the server.
+      fetch('http://localhost:3000/applyTask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error applying for task: " + data.error);
+        } else {
+          alert("Application successful! The requestor has been notified with your profile details.");
+        }
+      })
+      .catch(error => {
+        console.error("Error applying for task:", error);
+        alert("An error occurred while applying for the task.");
+      });
+    }
+  </script>
+</body>
+</html>

@@ -10,17 +10,36 @@
 
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">
-          <img src="../assets/css-logo-shield.webp" alt="Logo">
-          </div>
-        <ul class="nav-links">
-          <li><a href="home.html">Home</a></li>
-          <li><a href="formpage.html">Sign in as a Worker!</a></li>
-          <li><a href="workerpage.html">Workers</a></li>
-          <li><a href="requestorpage.html">Requestors</a></li>
-          <li><a href="profile.html">Profile</a></li>
-        </ul>
-      </nav>
+      <div class="logo">
+        <img src="../assets/css-logo-shield.webp" alt="Logo" />
+      </div>
+      <ul class="nav-links">
+        <!-- Regular Link -->
+        <li><a href="home.html">Home</a></li>
+  
+        <!-- Worker Dropdown using a select element -->
+        <li>
+          <select onchange="if (this.value) window.location.href=this.value">
+            <option value="">Worker</option>
+            <option value="login.html">Login</option>
+            <option value="profile.html">Profile</option>
+            <option value="work.html">Work</option>
+            <option value="applied.html">My Applied Tasks</option>
+          </select>
+        </li>
+  
+        <!-- Requestor Dropdown using a select element -->
+        <li>
+          <select onchange="if (this.value) window.location.href=this.value">
+            <option value="">Requestor</option>
+            <option value="requestorlogin.html">Login</option>
+            <option value="requestorprofile.html">Profile</option>
+            <option value="task.html">Task Creation</option>
+            <option value="postedtask.html">My Posted Tasks</option>
+          </select>
+        </li>
+      </ul>
+    </nav>
 
   <!-- Main Content Container -->
   <div class="container">

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Requestor Login</title>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">
+          <img src="../assets/css-logo-shield.webp" alt="Logo" />
+        </div>
+        <ul class="nav-links">
+          <!-- Regular Link -->
+          <li><a href="home.html">Home</a></li>
+    
+          <!-- Worker Dropdown using a select element -->
+          <li>
+            <select onchange="if (this.value) window.location.href=this.value">
+              <option value="">Worker</option>
+              <option value="login.html">Login</option>
+              <option value="profile.html">Profile</option>
+              <option value="work.html">Work</option>
+              <option value="applied.html">My Applied Tasks</option>
+            </select>
+          </li>
+    
+          <!-- Requestor Dropdown using a select element -->
+          <li>
+            <select onchange="if (this.value) window.location.href=this.value">
+              <option value="">Requestor</option>
+              <option value="requestorlogin.html">Login</option>
+              <option value="requestorprofile.html">Profile</option>
+              <option value="task.html">Task Creation</option>
+              <option value="postedtask.html">My Posted Tasks</option>
+            </select>
+          </li>
+        </ul>
+      </nav>
+    
+  <h2>Requestor Login</h2>
+  <form id="requestorLoginForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="submit" value="Login">
+  </form>
+  <div class="nav-links">
+    <p>Don't have an account? <a href="requestorregister.html">Create one here</a></p>
+  </div>
+  
+  <script>
+    document.getElementById('requestorLoginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      
+      fetch('http://localhost:3000/loginRequestor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else {
+          alert("Login successful!");
+          localStorage.setItem('requestor', JSON.stringify(data.user));
+          // Redirect to the requestor profile page
+          window.location.href = "home.html";
+        }
+      })
+      .catch(error => {
+        console.error("Login error:", error);
+        alert("An error occurred during login.");
+      });
+    });
+  </script>
+</body>
+</html>

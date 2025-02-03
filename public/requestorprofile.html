@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Requestor Profile</title>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="../assets/css-logo-shield.webp" alt="Logo" />
+    </div>
+    <ul class="nav-links">
+      <!-- Regular Link -->
+      <li><a href="home.html">Home</a></li>
+
+      <!-- Worker Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Worker</option>
+          <option value="login.html">Login</option>
+          <option value="profile.html">Profile</option>
+          <option value="work.html">Work</option>
+          <option value="applied.html">My Applied Tasks</option>
+        </select>
+      </li>
+
+      <!-- Requestor Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Requestor</option>
+          <option value="requestorlogin.html">Login</option>
+          <option value="requestorprofile.html">Profile</option>
+          <option value="task.html">Task Creation</option>
+          <option value="postedtask.html">My Posted Tasks</option>
+        </select>
+      </li>
+    </ul>
+  </nav>
+  
+
+  <div class="profile-container">
+    <h2>Your Requestor Profile</h2>
+    <!-- Editable Profile Form -->
+    <form id="profileForm">
+      <p>
+        Username:
+        <input type="text" id="usernameInput" name="username" />
+      </p>
+      <p>
+        Email:
+        <input type="email" id="emailInput" name="email" />
+      </p>
+      <p>
+        Password:
+        <!-- For security, this field is left blank by default. If the user enters a new password, it will be updated. -->
+        <input type="password" id="passwordInput" name="password" placeholder="Enter new password (optional)" />
+      </p>
+      <button type="button" onclick="saveProfile()">Save</button>
+    </form>
+
+    <h3>Your Posted Tasks</h3>
+    <div id="tasksContainer"></div>
+
+    <div class="nav-links">
+      <a href="post-task.html">Post a New Task</a> | 
+      <a href="all-tasks.html">View All Tasks</a>
+    </div>
+    
+    <!-- Logout Button -->
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    // When the page loads, retrieve the current requestor data from localStorage.
+    window.onload = function() {
+      const storedRequestor = localStorage.getItem('requestor');
+      if (!storedRequestor) {
+        alert("Please login first.");
+        window.location.href = "login.html";
+        return;
+      }
+      const requestor = JSON.parse(storedRequestor);
+      // Pre-fill the form with stored values (except password).
+      document.getElementById('usernameInput').value = requestor.username || '';
+      document.getElementById('emailInput').value = requestor.email || '';
+
+      // Fetch tasks posted by this requestor.
+      fetch(`http://localhost:3000/getRequestorTasks?username=${encodeURIComponent(requestor.username)}`)
+      .then(response => response.json())
+      .then(tasks => {
+        const container = document.getElementById('tasksContainer');
+        if (tasks.length === 0) {
+          container.innerHTML = `<p class="no-tasks">You haven't posted any tasks yet.</p>`;
+        } else {
+          tasks.forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task';
+            taskDiv.innerHTML = `<h4>${task.title}</h4><p>${task.description}</p>`;
+            container.appendChild(taskDiv);
+          });
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching tasks:", error);
+        document.getElementById('tasksContainer').innerHTML = `<p class="no-tasks">Unable to load tasks.</p>`;
+      });
+    };
+
+    // Save the updated profile data to localStorage.
+    function saveProfile() {
+      // Retrieve the current requestor data to preserve unchanged values.
+      const currentRequestor = JSON.parse(localStorage.getItem('requestor')) || {};
+      const passwordInput = document.getElementById('passwordInput').value;
+      // Only hash the password if a new one is provided.
+      const updatedPassword = passwordInput ? hashPassword(passwordInput) : currentRequestor.password;
+      
+      // Build the updated requestor object.
+      const updatedRequestor = {
+        username: document.getElementById('usernameInput').value,
+        email: document.getElementById('emailInput').value,
+        password: updatedPassword  // Retain the existing password if no new one is entered.
+      };
+
+      // Save the updated profile back to localStorage.
+      localStorage.setItem('requestor', JSON.stringify(updatedRequestor));
+      alert('Profile updated successfully!');
+    }
+
+    // Example password hashing function (for demonstration only)
+    function hashPassword(password) {
+      // Note: btoa is not secure for password hashing in production environments.
+      return btoa(password);
+    }
+
+    // Function to log out the user.
+    function logout() {
+      fetch('http://localhost:3000/logout', {
+        method: 'POST',
+        credentials: 'include' // Ensure cookies are sent with the request.
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert('Error logging out: ' + data.error);
+        } else {
+          alert('Logged out successfully.');
+          // Clear the requestor data from localStorage.
+          localStorage.removeItem('requestor');
+          // Redirect to the login page.
+          window.location.href = 'login.html';
+        }
+      })
+      .catch(error => {
+        console.error('Logout error:', error);
+        alert('An error occurred while logging out.');
+      });
+    }
+  </script>
+</body>
+</html>

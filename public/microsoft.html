@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microsoft SSO Authenticator</title>
+  <!-- Load the Microsoft Authentication Library (MSAL) from CDN -->
+  <script src="https://alcdn.msauth.net/browser/2.25.0/js/msal-browser.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f7f7f7;
+    }
+    h1 {
+      color: #2F2F2F;
+    }
+    .login-btn {
+      background-color: #0078d4;
+      color: white;
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .login-btn:hover {
+      background-color: #005ea2;
+    }
+    .info {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Microsoft SSO Authenticator</h1>
+  <button class="login-btn" id="ms-login-btn">Login with Microsoft</button>
+  <p class="info">
+    Note: This flow requires a valid client ID and app registration in Entra (Azure AD). You currently do not have access to your client ID, so the login will not work until you update the configuration.
+  </p>
+
+  <script>
+    // MSAL configuration
+    const msalConfig = {
+      auth: {
+        // Replace "YOUR_CLIENT_ID" with your actual client ID when available.
+        clientId: "YOUR_CLIENT_ID",
+        // Using the common endpoint; you can restrict this to your tenant if needed.
+        authority: "https://login.microsoftonline.com/common",
+        redirectUri: window.location.origin + "/ms-sso.html" // Adjust as necessary.
+      },
+      cache: {
+        cacheLocation: "sessionStorage", // You can change this to localStorage if desired.
+        storeAuthStateInCookie: false    // Set to true if you encounter issues on IE11 or Edge.
+      }
+    };
+
+    // Create an MSAL instance
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
+
+    // Define the scopes for the login request (adjust scopes as needed)
+    const loginRequest = {
+      scopes: ["User.Read"] // This is an example scope to read basic profile info.
+    };
+
+    document.getElementById('ms-login-btn').addEventListener('click', () => {
+      msalInstance.loginPopup(loginRequest)
+        .then(loginResponse => {
+          console.log('Login successful:', loginResponse);
+          alert("Login successful! Check console for details.");
+          // Optionally, you can acquire tokens silently or via a popup for further API calls.
+        })
+        .catch(error => {
+          console.error('Login error:', error);
+          alert("Error during Microsoft login. Please ensure your app is registered and your client ID is set.");
+        });
+    });
+  </script>
+</body>
+</html>
