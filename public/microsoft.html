@@ -45,11 +45,9 @@
     // MSAL configuration
     const msalConfig = {
       auth: {
-        // Replace "YOUR_CLIENT_ID" with your actual client ID when available.
-        clientId: "YOUR_CLIENT_ID",
-        // Using the common endpoint; you can restrict this to your tenant if needed.
-        authority: "https://login.microsoftonline.com/common",
-        redirectUri: window.location.origin + "/ms-sso.html" // Adjust as necessary.
+        clientId: "ad50374a-bac1-4031-911f-9c4715fa4414",
+        authority: "https://login.microsoftonline.com/12f933b3-3d61-4b19-9a4d-689021de8cc9",
+        redirectUri: "http://localhost:3000/home.html"
       },
       cache: {
         cacheLocation: "sessionStorage", // You can change this to localStorage if desired.

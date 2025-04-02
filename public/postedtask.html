@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Requestor Posted Tasks</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Optional: basic styling for the nested applicants table */
+    .applicants-table {
+      margin: 10px 0;
+      width: 95%;
+      border-collapse: collapse;
+    }
+    .applicants-table th,
+    .applicants-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    .applicants-table th {
+      background-color: #f2f2f2;
+    }
+    .toggle-btn {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <!-- Navbar -->
@@ -13,10 +33,7 @@
       <img src="/assets/css-logo-shield.webp" alt="Logo" />
     </div>
     <ul class="nav-links">
-      <!-- Regular Link -->
       <li><a href="home.html">Home</a></li>
-
-      <!-- Worker Dropdown using a select element -->
       <li>
         <select onchange="if (this.value) window.location.href=this.value">
           <option value="">Worker</option>
@@ -26,8 +43,6 @@
           <option value="applied.html">My Applied Tasks</option>
         </select>
       </li>
-
-      <!-- Requestor Dropdown using a select element -->
       <li>
         <select onchange="if (this.value) window.location.href=this.value">
           <option value="">Requestor</option>
@@ -41,9 +56,9 @@
   </nav>
 
   <div class="container">
-    <h2>Tasks You Have Posted</h2>
+    <h2 id="postedTasksHeader"></h2>
     <div id="tasksContainer">
-      <!-- Posted tasks will be displayed here -->
+      <!-- Posted tasks table will be displayed here -->
     </div>
   </div>
 
@@ -56,8 +71,9 @@
         return;
       }
       const requestor = JSON.parse(storedRequestor);
+      document.getElementById('postedTasksHeader').textContent = requestor.username + "'s Posted Tasks";
 
-      // Call the correct endpoint to fetch requestor posted tasks
+      // Fetch the requestor's posted tasks from the backend
       fetch(`http://localhost:3000/getRequestorTasks?username=${encodeURIComponent(requestor.username)}`)
         .then(response => response.json())
         .then(tasks => {
@@ -65,12 +81,38 @@
           if (tasks.length === 0) {
             container.innerHTML = '<p>No tasks posted yet.</p>';
           } else {
+            let tableHTML = '<table>';
+            tableHTML += `<thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>Description</th>
+                              <th>Deadline</th>
+                              <th>Reward</th>
+                              <th>Applicants</th>
+                            </tr>
+                          </thead>`;
+            tableHTML += '<tbody>';
             tasks.forEach(task => {
-              const taskDiv = document.createElement('div');
-              taskDiv.className = 'task';
-              taskDiv.innerHTML = `<h4>${task.title}</h4><p>${task.description}</p>`;
-              container.appendChild(taskDiv);
+              // Each task row
+              tableHTML += `<tr id="taskRow_${task.id}">
+                              <td>${task.title}</td>
+                              <td>${task.description}</td>
+                              <td>${task.deadline}</td>
+                              <td>${task.reward}</td>
+                              <td><button class="toggle-btn" onclick="toggleApplicants('${task.id}')">View Applicants</button></td>
+                            </tr>`;
+              // Hidden row to display applicants for this task
+              tableHTML += `<tr id="applicantsRow_${task.id}" style="display:none;">
+                              <td colspan="5">
+                                <div id="applicantsContainer_${task.id}">
+                                  <!-- Applicants profiles will be loaded here -->
+                                  <p>Loading applicants...</p>
+                                </div>
+                              </td>
+                            </tr>`;
             });
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
           }
         })
         .catch(error => {
@@ -78,6 +120,45 @@
           document.getElementById('tasksContainer').innerHTML = '<p>Error loading tasks.</p>';
         });
     };
+
+    // Function to toggle and fetch applicants for a given task
+    function toggleApplicants(taskId) {
+      const row = document.getElementById("applicantsRow_" + taskId);
+      // Toggle visibility
+      if (row.style.display === "none" || row.style.display === "") {
+        row.style.display = "table-row";
+        // Check if the applicants have been loaded already
+        const container = document.getElementById("applicantsContainer_" + taskId);
+        if (!container.getAttribute("data-loaded")) {
+          fetch(`http://localhost:3000/getTaskApplicants?taskId=${encodeURIComponent(taskId)}`)
+            .then(response => response.json())
+            .then(applicants => {
+              if (applicants.length === 0) {
+                container.innerHTML = '<p>No applicants for this task yet.</p>';
+              } else {
+                let appTable = '<table class="applicants-table">';
+                appTable += '<thead><tr><th>Username</th><th>Full Name</th><th>Profile Info</th></tr></thead><tbody>';
+                applicants.forEach(worker => {
+                  appTable += `<tr>
+                                  <td>${worker.username}</td>
+                                  <td>${worker.fullName || 'N/A'}</td>
+                                  <td>${worker.profileInfo || 'No details provided.'}</td>
+                                </tr>`;
+                });
+                appTable += '</tbody></table>';
+                container.innerHTML = appTable;
+              }
+              container.setAttribute("data-loaded", "true");
+            })
+            .catch(error => {
+              console.error('Error fetching applicants:', error);
+              container.innerHTML = '<p>Error loading applicants.</p>';
+            });
+        }
+      } else {
+        row.style.display = "none";
+      }
+    }
   </script>
 </body>
 </html>

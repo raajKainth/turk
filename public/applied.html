@@ -57,20 +57,41 @@
       }
       const worker = JSON.parse(storedWorker);
 
-      // Call the correct endpoint to fetch worker applied tasks
-      fetch(`http://localhost:3000/getWorkerAppliedTasks?username=${encodeURIComponent(worker.username)}`)
-        .then(response => response.json())
+      // Use worker.email and pass it as workerEmail
+      fetch(`http://localhost:3000/api/workerAppliedTasks?workerEmail=${encodeURIComponent(worker.email)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
         .then(tasks => {
           const container = document.getElementById('tasksContainer');
-          if (tasks.length === 0) {
+          if (!Array.isArray(tasks) || tasks.length === 0) {
             container.innerHTML = '<p>No tasks found that you have applied to.</p>';
           } else {
+            let tableHTML = '<table>';
+            tableHTML += `
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Deadline</th>
+                  <th>Reward</th>
+                </tr>
+              </thead>`;
+            tableHTML += '<tbody>';
             tasks.forEach(task => {
-              const taskDiv = document.createElement('div');
-              taskDiv.className = 'task';
-              taskDiv.innerHTML = `<h4>${task.title}</h4><p>${task.description}</p>`;
-              container.appendChild(taskDiv);
+              tableHTML += `
+                <tr>
+                  <td>${task.title}</td>
+                  <td>${task.description}</td>
+                  <td>${task.deadline}</td>
+                  <td>${task.reward}</td>
+                </tr>`;
             });
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
           }
         })
         .catch(error => {

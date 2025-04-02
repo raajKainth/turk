@@ -40,7 +40,6 @@
     </ul>
   </nav>
 
-  
   <h1>Login</h1>
   <form id="login-form">
     <label for="email">Email:</label>
@@ -58,7 +57,6 @@
   </div>
 
   <script>
-    // Use the same SHA-256 hashing function as in registration.
     async function hashPassword(password) {
       const encoder = new TextEncoder();
       const data = encoder.encode(password);
@@ -69,24 +67,17 @@
     }
 
     document.getElementById('login-form').addEventListener('submit', async function (e) {
-      e.preventDefault(); // Prevent default form submission
+      e.preventDefault();
 
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      // Hash the password using SHA-256 (async)
       const hashedPassword = await hashPassword(password);
 
-      // Notice we now use '/login' instead of '/loginWorker'
       fetch('http://localhost:3000/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: hashedPassword, // Send hashed password
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: hashedPassword })
       })
         .then(response => response.json())
         .then(data => {
@@ -94,6 +85,7 @@
             alert(`Error: ${data.error}`);
           } else {
             alert('Login successful!');
+            localStorage.setItem('worker', JSON.stringify(data.user));
             window.location.href = 'home.html'; // Redirect to home page
           }
         })

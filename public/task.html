@@ -4,19 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
-  <title>Post a New Task</title>
+  <title>Create New Task / View Task</title>
+  <style>
+    /* Optional: basic styling for the nested applicants table */
+    .applicants-table {
+      margin: 10px 0;
+      width: 95%;
+      border-collapse: collapse;
+    }
+    .applicants-table th,
+    .applicants-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    .applicants-table th {
+      background-color: #f2f2f2;
+    }
+    .toggle-btn {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-<!-- Navbar-->
-<nav class="navbar">
+  <!-- Navbar -->
+  <nav class="navbar">
     <div class="logo">
-      <img src="/assets/css-logo-shield.webp" alt="Logo"/>
+      <img src="/assets/css-logo-shield.webp" alt="Logo" />
     </div>
     <ul class="nav-links">
-      <!-- Regular Link -->
       <li><a href="home.html">Home</a></li>
-
-      <!-- Worker Dropdown using a select element -->
       <li>
         <select onchange="if (this.value) window.location.href=this.value">
           <option value="">Worker</option>
@@ -26,8 +43,6 @@
           <option value="applied.html">My Applied Tasks</option>
         </select>
       </li>
-
-      <!-- Requestor Dropdown using a select element -->
       <li>
         <select onchange="if (this.value) window.location.href=this.value">
           <option value="">Requestor</option>
@@ -40,30 +55,51 @@
     </ul>
   </nav>
 
+  <!-- Access Control Script -->
+  <script>
+    // If a worker is logged in, block access since this page is for requestors only.
+    if (localStorage.getItem('worker')) {
+      alert("Access Denied: This page is for requestors only.");
+      window.location.href = "home.html";
+    }
+    // If no requestor is logged in, redirect to the requestor login page.
+    else if (!localStorage.getItem('requestor')) {
+      alert("Please login as a requestor first.");
+      window.location.href = "requestorlogin.html";
+    }
+  </script>
+
   <h2>Post a New Task</h2>
   <form id="postTaskForm">
     <input type="text" id="title" placeholder="Task Title" required>
     <textarea id="description" placeholder="Task Description" rows="5" required></textarea>
     <input type="text" id="deadline" placeholder="Deadline (YYYY-MM-DD)" required>
     <input type="text" id="reward" placeholder="Reward" required>
-    <input type="text" id="username" placeholder="Username" required>
+    <!-- The username field may be omitted if it's derived from the logged in requestor -->
     <input type="submit" value="Post Task">
   </form>
-  
+
+  <!-- Section for Posted Tasks Table -->
+  <h2 id="postedTasksHeader"></h2>
+  <div id="tasksContainer">
+    <!-- Posted tasks table will be displayed here -->
+  </div>
+
   <script>
+    // Post Task Form Submission
     document.getElementById('postTaskForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const title = document.getElementById('title').value.trim();
       const description = document.getElementById('description').value.trim();
       const deadline = document.getElementById('deadline').value.trim();
       const reward = document.getElementById('reward').value.trim();
-      
+
       // Get requestor info from localStorage to associate the task with the requester
       const requestor = JSON.parse(localStorage.getItem('requestor'));
       
       if (!requestor) {
-        alert("Please login first.");
-        window.location.href = "login.html";
+        alert("Please login as a requestor first.");
+        window.location.href = "requestorlogin.html";
         return;
       }
       
@@ -80,7 +116,8 @@
           alert("Error: " + data.error);
         } else {
           alert("Task posted successfully!");
-          window.location.href = "home.html";
+          // Refresh the tasks table after posting a new task.
+          loadPostedTasks();
         }
       })
       .catch(error => {
@@ -88,6 +125,101 @@
         alert("An error occurred while posting the task.");
       });
     });
+
+    // Load Posted Tasks Table
+    function loadPostedTasks() {
+      const storedRequestor = localStorage.getItem('requestor');
+      if (!storedRequestor) {
+        alert('Please login as a requestor first.');
+        window.location.href = 'requestorlogin.html';
+        return;
+      }
+      const requestor = JSON.parse(storedRequestor);
+      document.getElementById('postedTasksHeader').textContent = requestor.username + "'s Posted Tasks";
+
+      fetch(`http://localhost:3000/getRequestorTasks?username=${encodeURIComponent(requestor.username)}`)
+        .then(response => response.json())
+        .then(tasks => {
+          const container = document.getElementById('tasksContainer');
+          if (tasks.length === 0) {
+            container.innerHTML = '<p>No tasks posted yet.</p>';
+          } else {
+            let tableHTML = '<table>';
+            tableHTML += `<thead>
+                            <tr>
+                              <th>Title</th>
+                              <th>Description</th>
+                              <th>Deadline</th>
+                              <th>Reward</th>
+                              <th>Applicants</th>
+                            </tr>
+                          </thead>`;
+            tableHTML += '<tbody>';
+            tasks.forEach(task => {
+              tableHTML += `<tr id="taskRow_${task.id}">
+                              <td>${task.title}</td>
+                              <td>${task.description}</td>
+                              <td>${task.deadline}</td>
+                              <td>${task.reward}</td>
+                              <td><button class="toggle-btn" onclick="toggleApplicants('${task.id}')">View Applicants</button></td>
+                            </tr>`;
+              tableHTML += `<tr id="applicantsRow_${task.id}" style="display:none;">
+                              <td colspan="5">
+                                <div id="applicantsContainer_${task.id}">
+                                  <p>Loading applicants...</p>
+                                </div>
+                              </td>
+                            </tr>`;
+            });
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching tasks:', error);
+          document.getElementById('tasksContainer').innerHTML = '<p>Error loading tasks.</p>';
+        });
+    }
+
+    // Toggle Applicants for a Task
+    function toggleApplicants(taskId) {
+      const row = document.getElementById("applicantsRow_" + taskId);
+      if (row.style.display === "none" || row.style.display === "") {
+        row.style.display = "table-row";
+        const container = document.getElementById("applicantsContainer_" + taskId);
+        if (!container.getAttribute("data-loaded")) {
+          fetch(`http://localhost:3000/getTaskApplicants?taskId=${encodeURIComponent(taskId)}`)
+            .then(response => response.json())
+            .then(applicants => {
+              if (applicants.length === 0) {
+                container.innerHTML = '<p>No applicants for this task yet.</p>';
+              } else {
+                let appTable = '<table class="applicants-table">';
+                appTable += '<thead><tr><th>Username</th><th>Full Name</th><th>Profile Info</th></tr></thead><tbody>';
+                applicants.forEach(worker => {
+                  appTable += `<tr>
+                                  <td>${worker.username}</td>
+                                  <td>${worker.fullName || 'N/A'}</td>
+                                  <td>${worker.profileInfo || 'No details provided.'}</td>
+                                </tr>`;
+                });
+                appTable += '</tbody></table>';
+                container.innerHTML = appTable;
+              }
+              container.setAttribute("data-loaded", "true");
+            })
+            .catch(error => {
+              console.error('Error fetching applicants:', error);
+              container.innerHTML = '<p>Error loading applicants.</p>';
+            });
+        }
+      } else {
+        row.style.display = "none";
+      }
+    }
+
+    // Initial load of posted tasks when the page is loaded
+    document.addEventListener('DOMContentLoaded', loadPostedTasks);
   </script>
 </body>
 </html>

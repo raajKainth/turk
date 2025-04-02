@@ -10,7 +10,7 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="logo">
-      <img src="../assets/css-logo-shield.webp" alt="Logo"/>
+      <img src="/assets/css-logo-shield.webp" alt="Logo" />
     </div>
     <ul class="nav-links">
       <!-- Regular Link -->
@@ -60,7 +60,6 @@
       </p>
       <p>
         Password: <input type="password" id="passwordInput" name="password" />
-        <!-- Password field is optional; if left empty, the original password remains unchanged -->
       </p>
       <p>
         Resume: 
@@ -76,101 +75,72 @@
   <button class="logout-btn" onclick="logout()">Logout</button>
 
   <script>
-    // When the page loads, retrieve the current user from localStorage and pre-fill the form.
     window.onload = function() {
-      const storedUser = localStorage.getItem('user');
-      if (!storedUser) {
-        alert('You need to login first');
-        window.location.href = 'login.html'; // Redirect to login if no user is found
-      } else {
-        const user = JSON.parse(storedUser);
-        document.getElementById('nameInput').value = user.name || '';
-        document.getElementById('emailInput').value = user.email || '';
-        document.getElementById('programInput').value = user.program || '';
-        document.getElementById('skillsInput').value = user.skills || '';
-        document.getElementById('experienceInput').value = user.experience || '';
-        // If a resume was uploaded previously, display a link to view it.
-        if (user.resume) {
-          const resumePreview = document.getElementById('resumePreview');
-          resumePreview.innerHTML = `<a href="${user.resume}" target="_blank">View Uploaded Resume</a>`;
-        }
+      const worker = JSON.parse(localStorage.getItem('worker'));
+      if (!worker) {
+        alert('Please log in first');
+        window.location.href = 'login.html'; // Redirect to login page
+        return;
+      }
+
+      // Pre-fill the form with worker details from localStorage
+      document.getElementById('nameInput').value = worker.name || '';
+      document.getElementById('emailInput').value = worker.email || '';
+      document.getElementById('programInput').value = worker.program || '';
+      document.getElementById('skillsInput').value = worker.skills || '';
+      document.getElementById('experienceInput').value = worker.experience || '';
+
+      // If a resume was uploaded previously, display a link to view it.
+      if (worker.resume) {
+        const resumePreview = document.getElementById('resumePreview');
+        resumePreview.innerHTML = `<a href="${worker.resume}" target="_blank">View Uploaded Resume</a>`;
       }
     };
 
-    // Save the updated profile data to localStorage.
+    // Save the updated profile data to the server
     function saveProfile() {
-      // Retrieve the current user to preserve data not updated by the user (like password, if unchanged).
-      const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+      const worker = JSON.parse(localStorage.getItem('worker'));
       const passwordInput = document.getElementById('passwordInput').value;
-      // Only hash the password if a new one is provided.
-      const updatedPassword = passwordInput ? hashPassword(passwordInput) : currentUser.password;
-
-      // Function to save the user data (including resume) to localStorage.
-      function saveUserWithResume(resumeData) {
-        const updatedUser = {
-          name: document.getElementById('nameInput').value,
-          email: document.getElementById('emailInput').value,
-          program: document.getElementById('programInput').value,
-          skills: document.getElementById('skillsInput').value,
-          experience: document.getElementById('experienceInput').value,
-          password: updatedPassword,  // Keep the old password if no new password is entered.
-          resume: resumeData  // This will be either the new resume data or the existing resume.
-        };
-
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        alert('Profile updated successfully!');
-
-        // If a new resume was uploaded, update the resume preview link.
-        if (resumeData) {
-          const resumePreview = document.getElementById('resumePreview');
-          resumePreview.innerHTML = `<a href="${resumeData}" target="_blank">View Uploaded Resume</a>`;
-        }
-      }
+      const updatedPassword = passwordInput ? hashPassword(passwordInput) : worker.password;
 
       const resumeInput = document.getElementById('resumeInput');
-      // If a new resume file is selected, read it using FileReader.
+      const formData = new FormData();
+      formData.append('name', document.getElementById('nameInput').value);
+      formData.append('email', document.getElementById('emailInput').value);
+      formData.append('program', document.getElementById('programInput').value);
+      formData.append('skills', document.getElementById('skillsInput').value);
+      formData.append('experience', document.getElementById('experienceInput').value);
+      formData.append('password', updatedPassword);
       if (resumeInput.files.length > 0) {
-        const file = resumeInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const resumeData = e.target.result; // Base64 encoded file data
-          saveUserWithResume(resumeData);
-        };
-        reader.readAsDataURL(file); // Read the file as a data URL.
-      } else {
-        // No new file selected; use the existing resume (if any).
-        saveUserWithResume(currentUser.resume || null);
+        formData.append('resume', resumeInput.files[0]);
       }
-    }
 
-    // Example hashing function (for demonstration only)
-    function hashPassword(password) {
-      // Note: btoa is not secure for password hashing in production.
-      return btoa(password);
-    }
-
-    // Function to log out the user
-    function logout() {
-      fetch('http://localhost:3000/logout', {
+      fetch('http://localhost:3000/updateProfile', {
         method: 'POST',
-        credentials: 'include' // Ensure cookies are sent with the request
+        body: formData,
       })
       .then(response => response.json())
       .then(data => {
-        if (data.error) {
-          alert('Error logging out: ' + data.error);
-        } else {
-          alert('Logged out successfully.');
-          // Clear localStorage if needed:
-          localStorage.removeItem('user');
-          // Redirect to the login page
-          window.location.href = 'login.html';
-        }
+        alert('Profile updated successfully!');
+        // Update localStorage with the new worker details
+        localStorage.setItem('worker', JSON.stringify(data));
+        window.location.href = 'profile.html'; // Reload profile page
       })
       .catch(error => {
-        console.error('Logout error:', error);
-        alert('An error occurred while logging out.');
+        console.error('Error updating profile:', error);
+        alert('An error occurred while saving your profile.');
       });
+    }
+
+    // Example password hashing function (for demonstration only)
+    function hashPassword(password) {
+      return btoa(password);  // In production, use a more secure hashing mechanism
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('worker');  // Clear the worker data from localStorage
+      window.location.href = 'login.html';  // Redirect to login page
     }
   </script>
 </body>

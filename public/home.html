@@ -1,49 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Home</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Home</title>
+  <!-- Load the Microsoft Authentication Library (MSAL) from CDN -->
+  <script src="https://alcdn.msauth.net/browser/2.25.0/js/msal-browser.min.js"></script>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-      <div class="logo">
-        <img src="/assets/css-logo-shield.webp" alt="Logo" />
-      </div>
-      <ul class="nav-links">
-        <!-- Regular Link -->
-        <li><a href="home.html">Home</a></li>
-  
-        <!-- Worker Dropdown using a select element -->
-        <li>
-          <select onchange="if (this.value) window.location.href=this.value">
-            <option value="">Worker</option>
-            <option value="login.html">Login</option>
-            <option value="profile.html">Profile</option>
-            <option value="work.html">Work</option>
-            <option value="applied.html">My Applied Tasks</option>
-          </select>
-        </li>
-  
-        <!-- Requestor Dropdown using a select element -->
-        <li>
-          <select onchange="if (this.value) window.location.href=this.value">
-            <option value="">Requestor</option>
-            <option value="requestorlogin.html">Login</option>
-            <option value="requestorprofile.html">Profile</option>
-            <option value="task.html">Task Creation</option>
-            <option value="postedtask.html">My Posted Tasks</option>
-          </select>
-        </li>
-      </ul>
-    </nav>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <img src="/assets/css-logo-shield.webp" alt="Logo" />
+    </div>
+    <ul class="nav-links">
+      <!-- Regular Link -->
+      <li><a href="home.html">Home</a></li>
+      <li><a href="microsoft.html">Microsoft</a></li>
+      <!-- Worker Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Worker</option>
+          <option value="login.html">Login</option>
+          <option value="profile.html">Profile</option>
+          <option value="work.html">Work</option>
+          <option value="applied.html">My Applied Tasks</option>
+        </select>
+      </li>
+      <!-- Requestor Dropdown using a select element -->
+      <li>
+        <select onchange="if (this.value) window.location.href=this.value">
+          <option value="">Requestor</option>
+          <option value="requestorlogin.html">Login</option>
+          <option value="requestorprofile.html">Profile</option>
+          <option value="task.html">Task Creation</option>
+          <option value="postedtask.html">My Posted Tasks</option>
+        </select>
+      </li>
+    </ul>
+  </nav>
 
+  <!-- Microsoft Login Popup Button -->
+  <button id="ms-login-btn" class="login-btn">Worker Login</button>
+  
   <!-- Main Content Container -->
   <div class="container">
-    
     <!-- About Section -->
     <section id="about" class="section">
       <h2>About UWindsor AMT Project</h2>
@@ -69,34 +72,70 @@
       </p>
     </section>
     
-
     <!-- Worker Section -->
-   <!-- Worker Section -->
-<section id="worker" class="section">
-  <h2>For Workers</h2>
-  <p>
-    Are you a UWindsor student or employee eager to earn experience and expand your skillset? Explore our dedicated dashboard designed just for you!
-  </p>
-  <div class="button-group">
-    <a href="profile.html" class="button">Worker Profile</a>
-    <a href="login.html" class="button">Worker Login</a>
-    <a href="task.html" class="button">Browse Tasks</a>
+    <section id="worker" class="section">
+      <h2>For Workers</h2>
+      <p>
+        Are you a UWindsor student or employee eager to earn experience and expand your skillset? Explore our dedicated dashboard designed just for you!
+      </p>
+      <div class="button-group">
+        <a href="profile.html" class="button">Worker Profile</a>
+        <a href="login.html" class="button">Worker Login</a>
+        <a href="work.html" class="button">Browse Tasks</a>
+      </div>
+    </section>
+
+    <!-- Requestor Section -->
+    <section id="requestor" class="section">
+      <h2>For Requestors</h2>
+      <p>
+        Are you looking to post or manage tasks efficiently? Our requestor portal streamlines the process, allowing you to connect with skilled workers effortlessly.
+      </p>
+      <div class="button-group">
+        <a href="requestorprofile.html" class="button">Requestor Profile</a>
+        <a href="requestorlogin.html" class="button">Requestor Login</a>
+        <a href="task.html" class="button">Create New Task/View Task</a>
+      </div>
+    </section>
   </div>
-</section>
 
-<!-- Requestor Section -->
-<section id="requestor" class="section">
-  <h2>For Requestors</h2>
-  <p>
-    Are you looking to post or manage tasks efficiently? Our requestor portal streamlines the process, allowing you to connect with skilled workers effortlessly.
-  </p>
-  <div class="button-group">
-    <a href="requestorprofile.html" class="button">Requestor Profile</a>
-    <a href="requestorlogin.html" class="button">Requestor Login</a>
-    <a href="task.html" class="button">Manage Posted Tasks</a>
-  </div>
-</section>
+  <!-- MSAL Login Popup Script -->
+  <script>
+    // MSAL configuration
+    const msalConfig = {
+      auth: {
+        clientId: "ad50374a-bac1-4031-911f-9c4715fa4414",
+        authority: "https://login.microsoftonline.com/12f933b3-3d61-4b19-9a4d-689021de8cc9",
+        redirectUri: "http://localhost:3000"
+      },
+      cache: {
+        cacheLocation: "sessionStorage",
+        storeAuthStateInCookie: false
+      }
+    };
 
+    // Create an MSAL instance
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
 
+    // Define the login request with the prompt parameter to force the login prompt every time
+    const loginRequest = {
+      scopes: ["User.Read"],
+      prompt: 'login'
+    };
+
+    // Attach click event to the login button to initiate the popup login
+    document.getElementById('ms-login-btn').addEventListener('click', () => {
+      msalInstance.loginPopup(loginRequest)
+        .then(loginResponse => {
+          console.log('Login successful:', loginResponse);
+          alert("Login successful! Check console for details.");
+          // Additional processing, such as token acquisition, can be done here.
+        })
+        .catch(error => {
+          console.error('Login error:', error);
+          alert("Error during Microsoft login. Please check the console for details.");
+        });
+    });
+  </script>
 </body>
 </html>
