@@ -93,7 +93,6 @@ const msalConfig = {
   auth: {
     clientId: "ad50374a-bac1-4031-911f-9c4715fa4414",
     authority: "https://login.microsoftonline.com/12f933b3-3d61-4b19-9a4d-689021de8cc9",
-    clientSecret: your-secret-key,
     redirectUri:  'http://localhost:3000/home.html'
   }
 };
@@ -535,19 +534,66 @@ app.post('/applyTask', (req, res) => {
 
 // GET: Retrieve tasks that a worker has applied to
 // Expected query: /api/workerAppliedTasks?username=workerEmail
-app.get('/api/workerAppliedTasks', (req, res, next) => {
-  try {
-    const workerEmail = req.query.username;
-    if (!workerEmail) {
-      return res.status(400).json({ error: 'No username provided' });
-    }
-    const tasks = appliedTasks.filter(task => task.workerEmail === workerEmail);
-    res.json(tasks);
-  } catch (error) {
-    console.error('Error in /api/workerAppliedTasks:', error);
-    next(error); // Pass the error to Express error handling
+
+app.get('/api/workerAppliedTasks', (req, res) => {
+  const workerEmail = req.query.workerEmail;
+  if (!workerEmail) {
+    return res.status(400).json({ error: 'Worker email is required' });
   }
+
+  // Query the database instead of using the in-memory array
+  tasksDb.all(
+    `SELECT t.* FROM tasks t 
+     JOIN applications a ON t.id = a.taskId 
+     WHERE json_extract(a.workerProfile, '$.username') = ?`,
+    [workerEmail],
+    (err, rows) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(200).json(rows);
+    }
+  );
 });
+
+app.post('/deleteApplication', (req, res) => {
+  const { taskId, workerEmail } = req.body;
+  
+  tasksDb.run(
+    `DELETE FROM applications 
+     WHERE taskId = ? 
+     AND json_extract(workerProfile, '$.username') = ?`,
+    [taskId, workerEmail],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ message: 'Application withdrawn successfully' });
+    }
+  );
+});
+
+// app.get('/getWorkerAppliedTasks', (req, res) => {
+//   const email = req.query.email;
+//   if (!email) {
+//     return res.status(400).json({ error: 'Worker email is required' });
+//   }
+
+//   tasksDb.all(
+//     `SELECT t.* FROM tasks t 
+//      JOIN applications a ON t.id = a.taskId 
+//      WHERE json_extract(a.workerProfile, '$.username') = ?`,
+//     [email],
+//     (err, rows) => {
+//       if (err) {
+//         console.error('Database error:', err);
+//         return res.status(500).json({ error: 'Database error' });
+//       }
+//       res.status(200).json(rows);
+//     }
+//   );
+// });
 
 
 /* ---------------------------
