@@ -43,8 +43,11 @@
   </nav>
 
   <!-- Microsoft Login Popup Button -->
-  <button id="ms-login-btn" class="login-btn">Worker Login</button>
   
+  <!-- <button id="ms-login-btn" class="login-btn">Worker Login</button>
+   -->
+
+   
   <!-- Main Content Container -->
   <div class="container">
     <!-- About Section -->
@@ -75,9 +78,9 @@
     <!-- Worker Section -->
     <section id="worker" class="section">
       <h2>For Workers</h2>
-      <p>
-        Are you a UWindsor student or employee eager to earn experience and expand your skillset? Explore our dedicated dashboard designed just for you!
-      </p>
+      <p>Are you a UWindsor student or employee eager to earn experience and expand your skillset? Explore our dedicated dashboard designed just for you!</p>
+      <p>Please sign in using the Microsoft Authenticator before you create/login with an existing account</p>
+      <button id="ms-login-btn" class="login-btn">Microsoft Authenticator</button>
       <div class="button-group">
         <a href="profile.html" class="button">Worker Profile</a>
         <a href="login.html" class="button">Worker Login</a>
@@ -130,6 +133,8 @@
           console.log('Login successful:', loginResponse);
           alert("Login successful! Check console for details.");
           // Additional processing, such as token acquisition, can be done here.
+          console.log('Redirecting to login.html...');
+          window.location.href = "login.html";
         })
         .catch(error => {
           console.error('Login error:', error);

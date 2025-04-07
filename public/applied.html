@@ -56,16 +56,33 @@
         return;
       }
       const worker = JSON.parse(storedWorker);
-
-      // Use worker.email and pass it as workerEmail
-      fetch(`http://localhost:3000/api/workerAppliedTasks?workerEmail=${encodeURIComponent(worker.email)}`)
+      
+      // Check if worker.email exists
+      if (!worker.email) {
+        alert('Worker email is missing. Please log in again.');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      console.log("Logged in worker:", worker);
+      console.log("Worker email:", worker.email);
+  
+      // If the server expects a different parameter name, change "workerEmail" to the correct name.
+      const url = `http://localhost:3000/api/workerAppliedTasks?workerEmail=${encodeURIComponent(worker.email)}`;
+      console.log("Fetching tasks from URL:", url);
+  
+      fetch(url)
         .then(response => {
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
           }
           return response.json();
         })
-        .then(tasks => {
+        .then(data => {
+          console.log("Full API response:", data);
+          const tasks = Array.isArray(data) ? data : data.tasks;
+          console.log("Extracted tasks:", tasks);
+  
           const container = document.getElementById('tasksContainer');
           if (!Array.isArray(tasks) || tasks.length === 0) {
             container.innerHTML = '<p>No tasks found that you have applied to.</p>';
@@ -99,6 +116,6 @@
           document.getElementById('tasksContainer').innerHTML = '<p>Error loading tasks.</p>';
         });
     };
-  </script>
+  </script>  
 </body>
 </html>

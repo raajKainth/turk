@@ -65,8 +65,7 @@
     <div id="tasksContainer"></div>
 
     <div class="nav-links">
-      <a href="post-task.html">Post a New Task</a> | 
-      <a href="all-tasks.html">View All Tasks</a>
+      <a href="task.html">View Task/Post a New Task</a>
     </div>
     
     <!-- Logout Button -->
@@ -79,7 +78,7 @@
       const storedRequestor = localStorage.getItem('requestor');
       if (!storedRequestor) {
         alert("Please login first.");
-        window.location.href = "login.html";
+        window.location.href = "requestorlogin.html";
         return;
       }
       const requestor = JSON.parse(storedRequestor);
@@ -88,25 +87,27 @@
       document.getElementById('emailInput').value = requestor.email || '';
 
       // Fetch tasks posted by this requestor.
-      fetch(`http://localhost:3000/getRequestorTasks?username=${encodeURIComponent(requestor.username)}`)
-      .then(response => response.json())
-      .then(tasks => {
-        const container = document.getElementById('tasksContainer');
-        if (tasks.length === 0) {
-          container.innerHTML = `<p class="no-tasks">You haven't posted any tasks yet.</p>`;
-        } else {
-          tasks.forEach(task => {
-            const taskDiv = document.createElement('div');
-            taskDiv.className = 'task';
-            taskDiv.innerHTML = `<h4>${task.title}</h4><p>${task.description}</p>`;
-            container.appendChild(taskDiv);
-          });
-        }
-      })
-      .catch(error => {
-        console.error("Error fetching tasks:", error);
-        document.getElementById('tasksContainer').innerHTML = `<p class="no-tasks">Unable to load tasks.</p>`;
-      });
+      
+      // fetch(`http://localhost:3000/getRequestorTasks?username=${encodeURIComponent(requestor.username)}`)
+      // .then(response => response.json())
+      // .then(tasks => {
+      //   const container = document.getElementById('tasksContainer');
+      //   if (tasks.length === 0) {
+      //     container.innerHTML = `<p class="no-tasks">You haven't posted any tasks yet.</p>`;
+      //   } else {
+      //     tasks.forEach(task => {
+      //       const taskDiv = document.createElement('div');
+      //       taskDiv.className = 'task';
+      //       taskDiv.innerHTML = `<h4>${task.title}</h4><p>${task.description}</p>`;
+      //       container.appendChild(taskDiv);
+      //     });
+      //   }
+      // })
+      // .catch(error => {
+      //   console.error("Error fetching tasks:", error);
+      //   document.getElementById('tasksContainer').innerHTML = `<p class="no-tasks">Unable to load tasks.</p>`;
+      // });
+
     };
 
     // Save the updated profile data to localStorage.

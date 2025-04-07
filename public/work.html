@@ -4,7 +4,93 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles.css">
-  <title>Available Tasks for Workers</title>  
+  <title>Available Tasks for Workers</title>
+  <style>
+    /* Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    
+    /* Button Styles */
+    .apply-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .apply-btn:hover {
+      background-color: #45a049;
+    }
+    
+    .delete-btn:hover {
+      background-color: #d32f2f;
+    }
+    
+    .apply-btn:disabled, .delete-btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    
+    /* Status Styles */
+    .status-pending {
+      color: #FFA500;
+      font-weight: bold;
+    }
+    
+    .status-accepted {
+      color: #008000;
+      font-weight: bold;
+    }
+    
+    .status-rejected {
+      color: #FF0000;
+      font-weight: bold;
+    }
+    
+    /* Message Styles */
+    .message {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+    
+    /* Container Styles */
+    .section {
+      margin-bottom: 40px;
+    }
+  </style>
 </head>
 <body>
   <!-- Navbar -->
@@ -13,10 +99,7 @@
       <img src="/assets/css-logo-shield.webp" alt="Logo"/>
     </div>
     <ul class="nav-links">
-      <!-- Regular Link -->
       <li><a href="home.html">Home</a></li>
-
-      <!-- Worker Dropdown using a select element -->
       <li>
         <select onchange="if (this.value) window.location.href=this.value">
           <option value="">Worker</option>
@@ -26,8 +109,6 @@
           <option value="applied.html">My Applied Tasks</option>
         </select>
       </li>
-
-      <!-- Requestor Dropdown using a select element -->
       <li>
         <select onchange="if (this.value) window.location.href=this.value">
           <option value="">Requestor</option>
@@ -40,166 +121,168 @@
     </ul>
   </nav>
 
-  <h2>Available Tasks</h2>
-  <div id="tasksContainer"></div>
-  
-  <h2>My Applied Tasks</h2>
-  <div id="appliedTasksContainer"></div>
+  <div class="container">
+    <!-- Available Tasks Section -->
+    <div class="section">
+      <h2>Available Tasks</h2>
+      <div id="tasksContainer" class="message">Loading available tasks...</div>
+    </div>
+    
+    <!-- Applied Tasks Section -->
+    <div class="section">
+      <h2>My Applied Tasks</h2>
+      <div id="appliedTasksContainer" class="message">Loading your applied tasks...</div>
+    </div>
+  </div>
 
   <script>
-    // When the page loads, verify the worker is logged in and fetch tasks.
+    // Main function that runs when page loads
     window.onload = function() {
-      // Check if the worker is logged in (assumed stored under "user" in localStorage)
-      const worker = JSON.parse(localStorage.getItem('user'));
+      // Check authentication
+      const worker = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('worker'));
       if (!worker) {
         alert("Please log in as a worker to view tasks.");
         window.location.href = "login.html";
         return;
       }
 
-      // Fetch all tasks from the server.
+      if (!worker.email) {
+        alert('Worker email is missing. Please log in again.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      console.log("Logged in worker:", worker);
+      
+      // Load both sections
+      loadAvailableTasks(worker);
+      loadAppliedTasks(worker);
+    };
+
+    // Function to load available tasks
+    function loadAvailableTasks(worker) {
       fetch('http://localhost:3000/getAllTasks')
         .then(response => response.json())
         .then(tasks => {
           const container = document.getElementById('tasksContainer');
+          
           if (!tasks || tasks.length === 0) {
-            container.innerHTML = "<p>No tasks available at the moment.</p>";
+            container.innerHTML = '<p class="message">No tasks available at the moment.</p>';
             return;
           }
           
-          // Create table structure for available tasks.
-          const table = document.createElement('table');
-          table.className = 'available-tasks-table';
+          let tableHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Deadline</th>
+                  <th>Reward</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>`;
           
-          // Table header with columns: Title, Description, Deadline, Reward, Action.
-          const thead = document.createElement('thead');
-          thead.innerHTML = `
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Deadline</th>
-              <th>Reward</th>
-              <th>Action</th>
-            </tr>
-          `;
-          table.appendChild(thead);
-          
-          // Table body populated with tasks.
-          const tbody = document.createElement('tbody');
           tasks.forEach(task => {
-            const tr = document.createElement('tr');
-            // Title
-            const tdTitle = document.createElement('td');
-            tdTitle.textContent = task.title;
-            tr.appendChild(tdTitle);
-            // Description
-            const tdDescription = document.createElement('td');
-            tdDescription.textContent = task.description;
-            tr.appendChild(tdDescription);
-            // Deadline
-            const tdDeadline = document.createElement('td');
-            tdDeadline.textContent = task.deadline;
-            tr.appendChild(tdDeadline);
-            // Reward
-            const tdReward = document.createElement('td');
-            tdReward.textContent = task.reward;
-            tr.appendChild(tdReward);
-            // Action: Apply Button
-            const tdAction = document.createElement('td');
-            const applyButton = document.createElement('button');
-            applyButton.className = 'apply-btn';
-            applyButton.textContent = 'Apply';
-            applyButton.onclick = function() {
-              applyToTask(task.id);
-            };
-            tdAction.appendChild(applyButton);
-            tr.appendChild(tdAction);
-            
-            tbody.appendChild(tr);
+            tableHTML += `
+              <tr data-task-id="${task.id}">
+                <td>${task.title || 'N/A'}</td>
+                <td>${task.description || 'N/A'}</td>
+                <td>${task.deadline ? new Date(task.deadline).toLocaleDateString() : 'N/A'}</td>
+                <td>${task.reward ? task.reward : 'N/A'}</td>
+                <td><button class="apply-btn" onclick="applyToTask('${task.id}', this)">Apply</button></td>
+              </tr>`;
           });
-          table.appendChild(tbody);
-          container.appendChild(table);
+          
+          tableHTML += '</tbody></table>';
+          container.innerHTML = tableHTML;
         })
         .catch(error => {
-          console.error("Error fetching tasks:", error);
-          document.getElementById('tasksContainer').innerHTML = "<p>Error loading tasks.</p>";
+          console.error("Error fetching available tasks:", error);
+          document.getElementById('tasksContainer').innerHTML = 
+            '<p class="message">Error loading available tasks. Please try again later.</p>';
         });
-        
-      // Load tasks that the worker has applied for.
-      fetch(`http://localhost:3000/getWorkerAppliedTasks?username=${encodeURIComponent(worker.username)}`)
-        .then(response => response.json())
-        .then(appliedTasks => {
+    }
+
+    // Function to load applied tasks
+    function loadAppliedTasks(worker) {
+      const url = `http://localhost:3000/api/workerAppliedTasks?workerEmail=${encodeURIComponent(worker.email)}`;
+      console.log("Fetching applied tasks from:", url);
+      
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+          return response.json();
+        })
+        .then(data => {
           const container = document.getElementById('appliedTasksContainer');
-          if (!appliedTasks || appliedTasks.length === 0) {
-            container.innerHTML = "<p>No applied tasks yet.</p>";
+          const tasks = Array.isArray(data) ? data : (data.tasks || []);
+          
+          if (tasks.length === 0) {
+            container.innerHTML = '<p class="message">You haven\'t applied to any tasks yet.</p>';
             return;
           }
           
-          // Create table structure for applied tasks.
-          const table = document.createElement('table');
-          table.className = 'applied-tasks-table';
+          let tableHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Deadline</th>
+                  <th>Reward</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>`;
           
-          // Table header with columns: Title, Description, Deadline, Reward.
-          const thead = document.createElement('thead');
-          thead.innerHTML = `
-            <tr>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Deadline</th>
-              <th>Reward</th>
-            </tr>
-          `;
-          table.appendChild(thead);
-          
-          // Table body populated with applied tasks.
-          const tbody = document.createElement('tbody');
-          appliedTasks.forEach(task => {
-            const tr = document.createElement('tr');
-            // Title
-            const tdTitle = document.createElement('td');
-            tdTitle.textContent = task.title;
-            tr.appendChild(tdTitle);
-            // Description
-            const tdDescription = document.createElement('td');
-            tdDescription.textContent = task.description;
-            tr.appendChild(tdDescription);
-            // Deadline
-            const tdDeadline = document.createElement('td');
-            tdDeadline.textContent = task.deadline;
-            tr.appendChild(tdDeadline);
-            // Reward
-            const tdReward = document.createElement('td');
-            tdReward.textContent = task.reward;
-            tr.appendChild(tdReward);
-            
-            tbody.appendChild(tr);
+          tasks.forEach(task => {
+            const statusClass = `status-${(task.status || 'pending').toLowerCase()}`;
+            tableHTML += `
+              <tr data-task-id="${task.id}">
+                <td>${task.title || 'N/A'}</td>
+                <td>${task.description || 'N/A'}</td>
+                <td>${task.deadline ? new Date(task.deadline).toLocaleDateString() : 'N/A'}</td>
+                <td>${task.reward ? task.reward : 'N/A'}</td>
+                <td class="${statusClass}">${task.status || 'Pending'}</td>
+                <td>
+                  <button class="delete-btn" onclick="deleteApplication('${task.id}', '${worker.email}', this)">
+                    Delete
+                  </button>
+                </td>
+              </tr>`;
           });
-          table.appendChild(tbody);
-          container.appendChild(table);
+          
+          tableHTML += '</tbody></table>';
+          container.innerHTML = tableHTML;
         })
         .catch(error => {
           console.error("Error fetching applied tasks:", error);
-          document.getElementById('appliedTasksContainer').innerHTML = "<p>Error loading applied tasks.</p>";
+          document.getElementById('appliedTasksContainer').innerHTML = 
+            '<p class="message">Error loading your applied tasks. Please try again later.</p>';
         });
-    };
+    }
 
-    // Function to apply for a task.
-    function applyToTask(taskId) {
-      // Retrieve the worker's profile from localStorage.
-      const worker = JSON.parse(localStorage.getItem('user'));
+    // Function to handle task applications
+    function applyToTask(taskId, buttonElement) {
+      const worker = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('worker'));
       if (!worker) {
         alert("Please log in as a worker to apply for tasks.");
         window.location.href = "login.html";
         return;
       }
 
-      // Build payload with taskId and worker's profile.
+      // Disable button during application
+      buttonElement.disabled = true;
+      buttonElement.textContent = 'Applying...';
+
       const payload = {
         taskId: taskId,
         workerProfile: worker
       };
 
-      // Send application to the server.
       fetch('http://localhost:3000/applyTask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -208,64 +291,57 @@
       .then(response => response.json())
       .then(data => {
         if (data.error) {
-          alert("Error applying for task: " + data.error);
+          alert("Error: " + data.error);
         } else {
-          alert("Application successful! The requestor has been notified with your profile details.");
-          // Refresh the applied tasks list after successful application.
-          document.getElementById('appliedTasksContainer').innerHTML = "";
-          const worker = JSON.parse(localStorage.getItem('user'));
-          fetch(`http://localhost:3000/getWorkerAppliedTasks?username=${encodeURIComponent(worker.username)}`)
-            .then(response => response.json())
-            .then(appliedTasks => {
-              const container = document.getElementById('appliedTasksContainer');
-              if (!appliedTasks || appliedTasks.length === 0) {
-                container.innerHTML = "<p>No applied tasks yet.</p>";
-                return;
-              }
-              
-              const table = document.createElement('table');
-              table.className = 'applied-tasks-table';
-              
-              const thead = document.createElement('thead');
-              thead.innerHTML = `
-                <tr>
-                  <th>Title</th>
-                  <th>Description</th>
-                  <th>Deadline</th>
-                  <th>Reward</th>
-                </tr>
-              `;
-              table.appendChild(thead);
-              
-              const tbody = document.createElement('tbody');
-              appliedTasks.forEach(task => {
-                const tr = document.createElement('tr');
-                const tdTitle = document.createElement('td');
-                tdTitle.textContent = task.title;
-                tr.appendChild(tdTitle);
-                const tdDescription = document.createElement('td');
-                tdDescription.textContent = task.description;
-                tr.appendChild(tdDescription);
-                const tdDeadline = document.createElement('td');
-                tdDeadline.textContent = task.deadline;
-                tr.appendChild(tdDeadline);
-                const tdReward = document.createElement('td');
-                tdReward.textContent = task.reward;
-                tr.appendChild(tdReward);
-                tbody.appendChild(tr);
-              });
-              table.appendChild(tbody);
-              container.appendChild(table);
-            })
-            .catch(error => {
-              console.error("Error fetching applied tasks:", error);
-              document.getElementById('appliedTasksContainer').innerHTML = "<p>Error loading applied tasks.</p>";
-            });
+          alert("Application submitted successfully!");
+          // Refresh both sections
+          loadAvailableTasks(worker);
+          loadAppliedTasks(worker);
         }
       })
       .catch(error => {
         console.error("Error applying for task:", error);
         alert("An error occurred while applying for the task.");
+      })
+      .finally(() => {
+        buttonElement.disabled = false;
+        buttonElement.textContent = 'Apply';
+      });
+    }
+
+    // Function to delete an application
+    function deleteApplication(taskId, workerEmail, buttonElement) {
+      if (!confirm("Are you sure you want to delete this application?")) {
+        return;
+      }
+
+      // Disable button during deletion
+      buttonElement.disabled = true;
+      buttonElement.textContent = 'Deleting...';
+
+      fetch('http://localhost:3000/deleteApplication', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, workerEmail })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else {
+          alert("Application deleted successfully!");
+          // Refresh the applied tasks section
+          const worker = JSON.parse(localStorage.getItem('user')) || JSON.parse(localStorage.getItem('worker'));
+          loadAppliedTasks(worker);
+        }
+      })
+      .catch(error => {
+        console.error("Error deleting application:", error);
+        alert("An error occurred while deleting the application.");
+      })
+      .finally(() => {
+        buttonElement.disabled = false;
+        buttonElement.textContent = 'Delete';
       });
     }
   </script>
