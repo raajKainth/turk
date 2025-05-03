@@ -1,72 +1,58 @@
-Welcome to our implmentation of Amazon's Mechanical Turk, @ uWin CS edition!
+UWinTurk – Microtask Marketplace for UWin CS Students
+
+Welcome to UWinTurk, our spin‑off of Amazon Mechanical Turk built by and for University of Windsor Computer Science students. Whether you need a quick code review, help with a data‑gathering chore, or just want to earn campus credit by solving tiny tasks, this is your place.
 
 Features
-Navigation Bar:
-A unified navbar across all pages for easy navigation between Home, Login, Register, Worker Dashboard, Worker Profile, and Requestor Dashboard.
 
-User Registration & Login:
+Unified navigation bar across Home, Login, Register, Worker Dashboard, Worker Profile and Requestor Dashboard for seamless browsing.
 
-Workers can register via a form that accepts personal details and a PDF resume upload.
-Passwords are securely hashed using bcrypt.
-Login functionality uses express-session for persistent authentication.
-Task Management:
+User registration and login with secure bcrypt password hashing—and we just finished Microsoft SSO (UWindsor Outlook) integration so you can sign in with your campus account in one click.
 
-Requestors (or workers acting in a requestor role) can create tasks by entering a title, description, deadline, and reward.
-A live-updating task table displays all tasks immediately after creation.
-Live Table Updates:
-Both the task dashboard and the worker registration table dynamically fetch and display the latest entries from the database.
+Task management: requestors can post new jobs with title, description, deadline and reward; tasks appear instantly in a live‑updating table.
+
+Live updates power both the task dashboard and the worker registry, so everyone sees the latest entries without reloading.
 
 Current Status
-What Is Working
-Navigation:
-The navbar is implemented and provides links to all major pages.
+What’s working:
 
-SSO UWindsor Outlook Authentication:
-Single Sign-On (SSO) integration using UWindsor Outlook is implemented!
+Navigation bar and page links
 
-User Authentication:
-Registration and login for workers function correctly using express-session.
-Passwords are hashed and stored securely.
-Protected routes (such as profile pages) correctly check for an active session.
-Task Creation and Live Updates:
+Microsoft SSO via UWindsor Outlook
 
-A form allows users to create new tasks.
-The tasks table dynamically updates to display the newly added tasks without requiring a page reload.
-Basic Backend Functionality:
+Registration, login and session‑based authentication
 
-The project uses SQLite for storing worker and task data.
-API endpoints for registering, logging in, adding tasks, fetching tasks, and fetching worker profiles are functional.
-What Is Not Finished or Missing
-CSS & Styling:
-The current CSS is basic and unfinished. The design and layout need further refinement.
+Protected routes for profiles and dashboards
 
-Task Matchmaking:
-There is currently no matchmaking logic that assigns tasks to workers based on skills or other criteria.
+Task creation form and real‑time task list updates
 
-Additional User Roles:
-The system currently primarily supports worker registration. Additional roles (such as requestors with different privileges) and their corresponding access controls need to be developed.
+SQLite backend with fully functional API endpoints for users, tasks and profiles
 
-Production-Grade Features:
+What’s still in progress:
 
-Error handling, logging, and security features (e.g., secure cookies for sessions in production) require further enhancement.
-The project does not yet have extensive documentation or tests.
+Polished CSS and layout refinements
+
+Task‑to‑worker matchmaking based on skills or availability
+
+Expanded user roles and access controls for true requester vs. worker workflows
+
+Production‑grade features: robust error handling, logging, secure cookies, full test coverage and documentation
 
 Installation & Setup
-Clone the Repository:
 
-git clone https://github.com/raajKainth/turk
-Install Dependencies: Navigate to the project root and install all Node.js dependencies:
+Clone the repo
+git clone https://github.com/raajKainth/turk.git
 
+Install dependencies
+cd turk
 npm install
-Note: If you encounter issues with native modules like sqlite3, consider using a stable Node.js LTS version and ensure your Python/build tools are properly configured.
 
-Set Up the Database:
+Ensure Node.js LTS and build tools are installed if sqlite3 compilation fails
 
-The server will automatically initialize the SQLite databases (workers.db and tasks.db) if they do not exist.
-Ensure that the uploads/resumes directory exists (the server will attempt to create it if it does not).
-Run the Server: Open a terminal, navigate to the server directory, and run:
+Initialize databases (created automatically on first run) and confirm uploads/resumes directory exists
 
+Start the server
 node server.js
 
-Serve the Frontend:
-http://localhost:3000/login.html
+Open your browser to http://localhost:3000/login.html
+
+We’ve built this with future employers in mind—clean code, secure auth, real‑world integrations—and we’d love your feedback or contributions!
